@@ -198,7 +198,7 @@ async function appGetInfo(photoId) {
     try {
       const info = await appContext.getModel?.('photo-models', photoId);
       if (info) {
-        console.log('got info from app');
+        console.debug('Got info from app');
         return info;
       }
     } catch {
@@ -208,14 +208,14 @@ async function appGetInfo(photoId) {
 };
 
 async function fetchSizes(photoURL) {
-  console.log('Fetching', photoURL);
+  console.debug('Fetching', photoURL);
   try {
     const p = await fetch(photoURL);
     const html = await p.text();
     const match = html.match(/descendingSizes":(\[.+?\])/);
     const s = match?.[1];
     if (s) {
-      console.log('got info from fetch');
+      console.debug('Got info from fetch');
       return JSON.parse(s);
     } else {
       console.log("No regex match at photo url:", photoURL);
@@ -235,7 +235,7 @@ async function populate(dropdownContent, href, nodeId) {
 
   let descendingSizes, appInfo;
   if (cache[photoId]) {
-    console.log('got info from cache');
+    console.debug('Got info from cache');
     descendingSizes = cache[photoId].descendingSizes;
   } else {
     appInfo = await appGetInfo(photoId);
@@ -252,7 +252,7 @@ async function populate(dropdownContent, href, nodeId) {
   const author = authorFromURL;
 
   if (o.USE_CACHE && !cache[photoId]) {
-    console.log('Adding to cache:', photoId);
+    console.debug('Adding to cache:', photoId);
     cache[photoId] = {'descendingSizes': descendingSizes};
   }
 
@@ -308,7 +308,7 @@ function processNode(node) {
   if (isMainPhotoPage) {
     const flickrDlButton = node.querySelector('.engagement-item.download');
     if (!flickrDlButton) {
-      console.log("Waiting for Flickr download button...");
+      console.debug("Waiting for Flickr download button...");
       return;
     }
     mflNodes.forEach(n => n.classList.add('dmfl-main-photo-page'));
@@ -320,7 +320,7 @@ function processNode(node) {
   } else if (isLightbox) {
     const lightboxEngagement = node.querySelector('.photo-card-engagement');
     if (!lightboxEngagement) {
-      console.log("Waiting for lightbox photo card engagement...");
+      console.debug("Waiting for lightbox photo card engagement...");
       return;
     }
     mflNodes.forEach(n => n.classList.add('dmfl-lightbox-page'));
