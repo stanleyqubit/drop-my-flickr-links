@@ -1,6 +1,9 @@
 // ==UserScript==
 // @name        Drop My Flickr Links!
 // @namespace   https://github.com/stanleyqubit/drop-my-flickr-links
+// @license     MIT License
+// @compatible  firefox Tampermonkey with UserScripts API Dynamic
+// @compatible  chrome Violentmonkey or Tampermonkey
 // @match       *://*.flickr.com/*
 // @grant       GM_getValue
 // @grant       GM_setValue
