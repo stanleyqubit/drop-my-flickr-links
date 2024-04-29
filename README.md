@@ -1,4 +1,5 @@
 # Drop My Flickr Links!
+
 Hover your mouse over the dropdown widget to display links to all sizes variants for any Flickr photo. Left-click on the widget to display the settings menu.
 
 Tested and compatible with:
@@ -16,4 +17,5 @@ Main photo page view:
 ![demo-gif2](https://github.com/stanleyqubit/drop-my-flickr-links/assets/109595703/4e44eacd-2bed-44bf-9ece-4948cbabc479)
 
 ## Install
+
 Install from [Greasyfork](https://greasyfork.org/en/scripts/493773-drop-my-flickr-links).
