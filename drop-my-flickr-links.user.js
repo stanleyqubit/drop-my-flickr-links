@@ -601,7 +601,7 @@ console.log('Adding styles.');
 GM_addStyle(style);
 
 const modalHTML = `
-<form class="dmfl-modal-content">
+<form class="dmfl-modal-content" method="dialog">
   <span class="dmfl-modal-close">&times;</span>
   <h3>Drop My Flickr Links!  \u27b2  Settings</h3><br>
   <div class="dmfl-modal-body"></div>
@@ -713,6 +713,7 @@ function showSettings() {
     modalSave.disabled = true;
     modalRestore.disabled = true;
     GM_setValue('settings', tempSettings);
+    window.location.reload();
   }
 }
 
