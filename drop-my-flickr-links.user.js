@@ -2,6 +2,7 @@
 // @name        Drop My Flickr Links!
 // @namespace   https://github.com/stanleyqubit/drop-my-flickr-links
 // @license     MIT License
+// @author      stanleyqubit
 // @compatible  firefox Tampermonkey with UserScripts API Dynamic
 // @compatible  chrome Violentmonkey or Tampermonkey
 // @match       *://*.flickr.com/*
@@ -10,7 +11,7 @@
 // @grant       GM_addStyle
 // @grant       GM_download
 // @grant       GM_registerMenuCommand
-// @version     1.0
+// @version     1.1
 // @icon        https://www.google.com/s2/favicons?sz=64&domain=flickr.com
 // @description Creates a hoverable dropdown menu that shows links to all available sizes for Flickr photos.
 // ==/UserScript==
@@ -228,6 +229,7 @@ async function populate(dropdownContent, href, nodeId) {
   if (nodesPopulated.has(nodeId)) return;
   nodesPopulated.add(nodeId);
 
+  const scheme = href.split('/')[0];
   const photoId = href.split('/')[5];
   const photoURL = href.split('/').slice(0, 6).join('/');
   const authorFromURL = href.split('/')[4];
@@ -260,7 +262,11 @@ async function populate(dropdownContent, href, nodeId) {
     const filename = imageUrl.split('/').pop();
     const extension = filename.split('.').pop();
     const anchor = document.createElement('a');
-    const downloadURL = imageUrl.replace(/(\.[a-z]+)$/i, '_d$1');
+    let downloadURL = '';
+    if (imageUrl.startsWith('//')) {
+      downloadURL += scheme;
+    }
+    downloadURL += imageUrl.replace(/(\.[a-z]+)$/i, '_d$1');
     anchor.setAttribute('href', imageUrl);
     anchor.textContent = `${item.width} x ${item.height} (${item.key})`;
     if (!extension.endsWith('jpg')) {
@@ -302,7 +308,7 @@ function processNode(node) {
   dropdownContainer.appendChild(dropdownButton);
   dropdownContainer.appendChild(dropdownContent);
 
-  const mflNodes = [dropdownContainer, dropdownButton, dropdownContent];
+  const dmflNodes = [dropdownContainer, dropdownButton, dropdownContent];
 
   if (isMainPhotoPage) {
     const flickrDlButton = node.querySelector('.engagement-item.download');
@@ -310,7 +316,7 @@ function processNode(node) {
       console.debug("Waiting for Flickr download button...");
       return;
     }
-    mflNodes.forEach(n => n.classList.add('dmfl-main-photo-page'));
+    dmflNodes.forEach(n => n.classList.add('dmfl-main-photo-page'));
     if (o.REPLACE_FLICKR_DL_BUTTON) {
       node.replaceChild(dropdownContainer, flickrDlButton);
     } else {
@@ -322,11 +328,11 @@ function processNode(node) {
       console.debug("Waiting for lightbox photo card engagement...");
       return;
     }
-    mflNodes.forEach(n => n.classList.add('dmfl-lightbox-page'));
+    dmflNodes.forEach(n => n.classList.add('dmfl-lightbox-page'));
     lightboxEngagement.appendChild(dropdownContainer);
   } else {
     // Photostream, albums, faves, galleries, search page, explore page
-    mflNodes.forEach(n => n.classList.add('dmfl-thumbnail-page'));
+    dmflNodes.forEach(n => n.classList.add('dmfl-thumbnail-page'));
     dropdownButton.textContent = o.BUTTON_TEXT_ON_THUMBNAIL;
     node.insertBefore(dropdownContainer, node.firstChild);
   }
