@@ -11,10 +11,14 @@
 // @grant       GM_addStyle
 // @grant       GM_download
 // @grant       GM_registerMenuCommand
-// @version     1.2
+// @version     1.3
 // @icon        https://www.google.com/s2/favicons?sz=64&domain=flickr.com
 // @description Creates a hoverable dropdown menu that shows links to all available sizes for Flickr photos.
 // ==/UserScript==
+//
+// The photos available for download through this userscript may be protected by copyright laws.
+// Downloading a photo constitutes your agreement to use the photo in accordance with the license
+// associated with it. Please check the individual photo's license information before use.
 
 
 console.log("Loaded.");
@@ -30,14 +34,14 @@ const defaultSettings = {
   USE_CACHE: {
     value: true,
     name: 'Use cache',
-    desc: 'Get sizes once for each photo and remember them for the current session ' +
-          '(until page reload).',
+    desc: 'Get sizes once for each photo and remember them for the current ' +
+          'session (until page reload).',
   },
   REPLACE_FLICKR_DL_BUTTON: {
     value: false,
     name: 'Replace Flickr download button',
-    desc: 'Whether to replace the Flickr download button shown in the main photo page ' +
-          'with our button.',
+    desc: 'Whether to replace the Flickr download button shown in the main ' +
+          'photo page with our button.',
   },
   PREPEND_AUTHOR_ID: {
     value: true,
@@ -47,10 +51,11 @@ const defaultSettings = {
   UPDATE_INTERVAL: {
     value: 2000,
     name: 'Update interval',
-    desc: 'Time interval (in milliseconds) at which scanning and processing for relevant nodes should be done. ' +
-          'Used for the timeout function in the main script loop. Smaller values translate to faster processing ' +
-          'and a higher workload, while the opposite applies for larger values. Recommended values should be in ' +
-          'the range 500 - 2000.',
+    desc: 'Time interval (in milliseconds) at which scanning and processing ' +
+          'for relevant nodes should be done. Used for the timeout function ' +
+          'in the main script loop. Smaller values translate to faster ' +
+          'processing and a higher workload, while the opposite applies for ' +
+          'larger values. Recommended values should be in the range 500 - 2000.',
   },
 
   /* Dropdown "button" base appearance */
@@ -156,12 +161,12 @@ const defaultSettings = {
     name: 'Menu content background color',
     desc: 'CSS value.',
   },
-  CONTENT_A_TEXT_COLOR: {
+  CONTENT_TEXT_COLOR: {
     value: '#000000',
     name: 'Menu content text color',
     desc: 'CSS value.',
   },
-  CONTENT_A_TEXT_SIZE: {
+  CONTENT_TEXT_SIZE: {
     value: '18px',
     name: 'Menu content text size',
     desc: 'CSS value.',
@@ -169,6 +174,11 @@ const defaultSettings = {
   CONTENT_A_HOVER_BG_COLOR: {
     value: '#dddddd',
     name: 'Menu content anchor element background color on hover',
+    desc: 'CSS value.',
+  },
+  CONTENT_DIV_HOVER_BG_COLOR: {
+    value: '#5bc4eb',
+    name: 'Menu content preview element background color on hover',
     desc: 'CSS value.',
   },
 }
@@ -229,10 +239,11 @@ async function populate(dropdownContent, href, nodeId) {
   if (nodesPopulated.has(nodeId)) return;
   nodesPopulated.add(nodeId);
 
-  const scheme = href.split('/')[0];
-  const photoId = href.split('/')[5];
-  const photoURL = href.split('/').slice(0, 6).join('/');
-  const authorFromURL = href.split('/')[4];
+  const components = href.split('/');
+  const scheme = components[0];
+  const photoId = components[5];
+  const photoURL = components.slice(0, 6).join('/');
+  const authorFromURL = components[4];
 
   let descendingSizes, appInfo;
   if (cache[photoId]) {
@@ -261,6 +272,8 @@ async function populate(dropdownContent, href, nodeId) {
     const imageUrl = item.url || item.src || item.displayUrl;
     const filename = imageUrl.split('/').pop();
     const extension = filename.split('.').pop();
+    const entry = document.createElement('div');
+    entry.className = 'dmfl-dropdown-entry';
     const anchor = document.createElement('a');
     let downloadURL = '';
     if (imageUrl.startsWith('//')) {
@@ -277,7 +290,30 @@ async function populate(dropdownContent, href, nodeId) {
       GM_download(downloadURL, downloadFilename);
       event.preventDefault();
     })
-    dropdownContent.appendChild(anchor);
+    entry.appendChild(anchor);
+    const previewContainer = document.createElement('div');
+    previewContainer.className = 'dmfl-preview-container';
+    previewContainer.textContent = '[ + ]';
+    previewContainer.addEventListener('click', () => {
+      const previewBg = document.createElement('div');
+      previewBg.className = 'dmfl-preview-background';
+      const previewDl = document.createElement('a');
+      previewDl.className = 'dmfl-preview-download';
+      previewDl.innerText = '\u21e3';
+      previewDl.addEventListener('click', (event) => {
+        GM_download(downloadURL, downloadFilename);
+        event.preventDefault();
+      })
+      previewBg.appendChild(previewDl);
+      const previewImg = document.createElement('img');
+      previewImg.className = 'dmfl-preview-image';
+      previewImg.src = imageUrl;
+      previewBg.onclick = () => { previewBg.remove() };
+      previewBg.appendChild(previewImg);
+      document.body.appendChild(previewBg);
+    })
+    entry.appendChild(previewContainer);
+    dropdownContent.appendChild(entry);
   }
 }
 
@@ -376,26 +412,78 @@ const style = `
     font-size: ${o.BUTTON_TEXT_SIZE};
     width: ${o.BUTTON_WIDTH};
     height: ${o.BUTTON_HEIGHT};
-    z-index: 10002 !important;
+    z-index: 10002;
     border: none;
   }
 
   .dmfl-dropdown-content {
     display: none;
-    z-index: 10003 !important;
+    z-index: 10003;
     width: max-content;
     height: max-content;
     background-color: ${o.CONTENT_BG_COLOR};
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    font-size: ${o.CONTENT_TEXT_SIZE};
+    text-decoration: none;
+  }
+
+  .dmfl-dropdown-entry {
+    z-index: 10004;
+    padding: 3px 3px;
   }
 
   .dmfl-dropdown-content a {
-    display: block;
-    color: ${o.CONTENT_A_TEXT_COLOR};
-    z-index: 10004 !important;
-    padding: 3px 3px;
-    font-size: ${o.CONTENT_A_TEXT_SIZE};
-    text-decoration: none;
+    display: inline-block !important;
+    color: ${o.CONTENT_TEXT_COLOR};
+  }
+
+  .dmfl-dropdown-content div.dmfl-preview-container {
+    display: inline-block;
+    color: ${o.CONTENT_TEXT_COLOR};
+    margin-left: 10px;
+    margin-right: 5px;
+  }
+
+  .dmfl-dropdown-content div.dmfl-preview-container:hover {
+    background-color: ${o.CONTENT_DIV_HOVER_BG_COLOR};
+    opacity: .9;
+  }
+
+  .dmfl-preview-background {
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.9);
+    display: flex;
+    position: fixed;
+    z-index: 30000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .dmfl-preview-image {
+    max-width: 100vw;
+    max-height: 100vh;
+    object-fit: cover;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .dmfl-preview-download {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
+    height: 40px;
+    width: 40px;
+    color: honeydew !important;
+    background-color: ${o.BUTTON_BG_COLOR};
+    position: fixed;
+    z-index: 30001;
+    right: 20px;
+    bottom: 20px;
   }
 
   .dmfl-dropdown-content a:hover {
@@ -403,7 +491,7 @@ const style = `
   }
 
   .dmfl-dropdown-container:hover .dmfl-dropdown-content {
-    display: inline-block;
+    display: block;
   }
 
   .dmfl-dropdown-container:hover .dmfl-dropdown-button {
