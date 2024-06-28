@@ -12,7 +12,7 @@
 // @grant       GM_download
 // @grant       GM_notification
 // @grant       GM_registerMenuCommand
-// @version     1.4
+// @version     1.4.1
 // @icon        https://www.google.com/s2/favicons?sz=64&domain=flickr.com
 // @description Creates a hoverable dropdown menu that shows links to all available sizes for Flickr photos.
 // ==/UserScript==
@@ -240,10 +240,11 @@ async function fetchSizes(photoURL) {
 function dl(downloadURL, downloadFilename) {
   let download;
   const checkStatus = (responseObject) => {
-    if (/^[45]/.test(responseObject.status)) /* Violentmonkey */ {
+    const status = responseObject.status;
+    if (/^[45]/.test(status) || status == 0) /* Violentmonkey */ {
       download.abort();
       console.warn('Download failed.', {responseObject});
-      GM_notification(`Download failed.\nServer responded with status code ${responseObject.status}`, scriptName);
+      GM_notification(`URL: ${downloadURL}\n\nDownload failed with status code: ${status}`, scriptName);
     }
     if (responseObject.error) /* Tampermonkey */ {
       const msg = `URL: ${downloadURL}\n\nDownload error: ${responseObject.error}`;
@@ -255,7 +256,7 @@ function dl(downloadURL, downloadFilename) {
     url: downloadURL,
     name: downloadFilename,
     onprogress: (res) => { checkStatus(res) },
-    onerror: (res) => { checkStatus(res) },
+    onerror: (res) => { checkStatus(res); },
   });
 }
 
