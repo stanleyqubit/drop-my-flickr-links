@@ -10,8 +10,9 @@
 // @grant       GM_setValue
 // @grant       GM_addStyle
 // @grant       GM_download
+// @grant       GM_notification
 // @grant       GM_registerMenuCommand
-// @version     1.3
+// @version     1.4
 // @icon        https://www.google.com/s2/favicons?sz=64&domain=flickr.com
 // @description Creates a hoverable dropdown menu that shows links to all available sizes for Flickr photos.
 // ==/UserScript==
@@ -22,6 +23,7 @@
 
 
 console.log("Loaded.");
+const scriptName = "Drop My Flickr Links!";
 
 
 const defaultSettings = {
@@ -204,7 +206,7 @@ const cache = Object.create(null);
 
 async function appGetInfo(photoId) {
   const appContext = unsafeWindow?.appContext;
-  if (appContext && appContext.modelRegistries?.['photo-models']) {
+  if (appContext) {
     try {
       const info = await appContext.getModel?.('photo-models', photoId);
       if (info) {
@@ -215,7 +217,7 @@ async function appGetInfo(photoId) {
       // returns undefined if await fails
     }
   }
-};
+}
 
 async function fetchSizes(photoURL) {
   console.debug('Fetching', photoURL);
@@ -233,7 +235,29 @@ async function fetchSizes(photoURL) {
   } catch (error) {
     console.log("Fetch sizes failed with error:", error);
   }
-};
+}
+
+function dl(downloadURL, downloadFilename) {
+  let download;
+  const checkStatus = (responseObject) => {
+    if (/^[45]/.test(responseObject.status)) /* Violentmonkey */ {
+      download.abort();
+      console.warn('Download failed.', {responseObject});
+      GM_notification(`Download failed.\nServer responded with status code ${responseObject.status}`, scriptName);
+    }
+    if (responseObject.error) /* Tampermonkey */ {
+      const msg = `URL: ${downloadURL}\n\nDownload error: ${responseObject.error}`;
+      console.warn(msg);
+      GM_notification(msg, scriptName);
+    }
+  };
+  download = GM_download({
+    url: downloadURL,
+    name: downloadFilename,
+    onprogress: (res) => { checkStatus(res) },
+    onerror: (res) => { checkStatus(res) },
+  });
+}
 
 async function populate(dropdownContent, href, nodeId) {
   if (nodesPopulated.has(nodeId)) return;
@@ -287,7 +311,7 @@ async function populate(dropdownContent, href, nodeId) {
     }
     const downloadFilename = o.PREPEND_AUTHOR_ID ? `${author}_-_${filename}` : filename;
     anchor.addEventListener('click', (event) => {
-      GM_download(downloadURL, downloadFilename);
+      dl(downloadURL, downloadFilename);
       event.preventDefault();
     })
     entry.appendChild(anchor);
@@ -301,7 +325,7 @@ async function populate(dropdownContent, href, nodeId) {
       previewDl.className = 'dmfl-preview-download';
       previewDl.innerText = '\u21e3';
       previewDl.addEventListener('click', (event) => {
-        GM_download(downloadURL, downloadFilename);
+        dl(downloadURL, downloadFilename);
         event.preventDefault();
       })
       previewBg.appendChild(previewDl);
@@ -691,7 +715,7 @@ GM_addStyle(style);
 const modalHTML = `
 <form class="dmfl-modal-content" method="dialog">
   <span class="dmfl-modal-close">&times;</span>
-  <h3>Drop My Flickr Links!  \u27b2  Settings</h3><br>
+  <h3>${scriptName}  \u27b2  Settings</h3><br>
   <div class="dmfl-modal-body"></div>
   <div class="dmfl-modal-footer">
     <button class="dmfl-modal-save-button" type="submit" disabled>Save &amp; Reload</button>
@@ -764,9 +788,8 @@ function showSettings() {
       entry.appendChild(label);
       entry.appendChild(inputElement);
 
-      let colorPicker;
       if (key.indexOf('_COLOR') >= 0) {
-        colorPicker = document.createElement('input');
+        const colorPicker = document.createElement('input');
         colorPicker.className = 'dmfl-modal-color-picker';
         colorPicker.setAttribute('type', 'color');
         colorPicker.value = inputElement.value;
