@@ -811,6 +811,7 @@ const INSERT_LOCATIONS = [
   'div.photo-list-photo-view', /* Thumbnails */
   'div.photo-list-tile-view',
   'div.photo-list-gallery-photo-view',
+  'div.photo-list-description-view',
   'div.photo-card-engagement-view',
   'div.photo-engagement-view', /* Main page, Lighbox page */
 ].join(', ');
