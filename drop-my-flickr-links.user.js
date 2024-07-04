@@ -6,20 +6,36 @@
 // @compatible  firefox Tampermonkey with UserScripts API Dynamic
 // @compatible  chrome Violentmonkey or Tampermonkey
 // @match       *://*.flickr.com/*
+// @connect     www.flickr.com
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @grant       GM_addStyle
 // @grant       GM_download
+// @grant       GM_openInTab
 // @grant       GM_notification
+// @grant       GM.xmlHttpRequest
 // @grant       GM_registerMenuCommand
-// @version     1.4.1
+// @version     1.5
 // @icon        https://www.google.com/s2/favicons?sz=64&domain=flickr.com
 // @description Creates a hoverable dropdown menu that shows links to all available sizes for Flickr photos.
 // ==/UserScript==
-//
-// The photos available for download through this userscript may be protected by copyright laws.
-// Downloading a photo constitutes your agreement to use the photo in accordance with the license
-// associated with it. Please check the individual photo's license information before use.
+
+
+/* The photos available for download through this userscript may be protected by
+ * copyright laws. Downloading a photo constitutes your agreement to use the photo
+ * in accordance with the license associated with it. Please check the individual
+ * photo's license information before use.
+ *
+ * Note -- Firefox + Tampermonkey users: in order for the script to have full
+ * access to the Flickr YUI `appContext` global variable and thus avoid having to
+ * resort to workarounds which may result in incorrectly displayed links or
+ * incomplete photo data, go to the Tampermonkey dashboard -> Settings, under
+ * "Config mode" select "Advanced", then under "Content Script API" select
+ * "UserScripts API Dynamic", then click "Save".
+ *
+ * FYI -- some authors may choose to disable photo downloads which means that
+ * Flickr will not make certain photo sizes (e.g. originals) available for users
+ * that aren't signed in with a Flickr account. */
 
 
 console.log("Loaded.");
@@ -49,6 +65,11 @@ const defaultSettings = {
     value: true,
     name: 'Prepend author ID to downloaded image file name',
     desc: 'Self-explanatory.',
+  },
+  SHOW_LICENSE_INFO: {
+    value: true,
+    name: 'Show license information',
+    desc: 'Shows a hyperlink to the photo\'s license when in preview mode.',
   },
   UPDATE_INTERVAL: {
     value: 2000,
@@ -203,37 +224,132 @@ const nodesProcessed = new Set();
 const nodesPopulated = new Set();
 const cache = Object.create(null);
 
+const LICENSE_INFO = [
+  {
+    value: '0',
+    text: 'All rights reserved',
+    url: 'https://flickrhelp.com/hc/en-us/articles/4404078674324-Change-Your-Photo-s-License-in-Flickr'
+  },
+  {
+    value: '1',
+    text: 'Attribution-NonCommercial-ShareAlike',
+    url: 'https://creativecommons.org/licenses/by-nc-sa/2.0/'
+  },
+  {
+    value: '2',
+    text: 'Attribution-NonCommercial',
+    url: 'https://creativecommons.org/licenses/by-nc/2.0/'
+  },
+  {
+    value: '3',
+    text: 'Attribution-NonCommercial-NoDerivs',
+    url: 'https://creativecommons.org/licenses/by-nc-nd/2.0/'
+  },
+  {
+    value: '4',
+    text: 'Attribution',
+    url: 'https://creativecommons.org/licenses/by/2.0/'
+  },
+  {
+    value: '5',
+    text: 'Attribution-ShareAlike',
+    url: 'https://creativecommons.org/licenses/by-sa/2.0/'
+  },
+  {
+    value: '6',
+    text: 'Attribution-NoDerivs',
+    url: 'https://creativecommons.org/licenses/by-nd/2.0/'
+  },
+  {
+    value: '7',
+    text: 'No known copyright restrictions',
+    url: '/commons/usage/'
+  },
+  {
+    value: '8',
+    text: 'United States government work',
+    url: 'http://www.usa.gov/copyright.shtml'
+  },
+  {
+    value: '9',
+    text: 'Public Domain Dedication (CC0)',
+    url: 'https://creativecommons.org/publicdomain/zero/1.0/'
+  },
+  {
+    value: '10',
+    text: 'Public Domain Work',
+    url: 'https://creativecommons.org/publicdomain/mark/1.0/'
+  }
+];
 
+
+function getRandomNumber(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+const sizesOrder = ["o", "8k", "7k", "6k", "5k", "4k", "3k", "k", "h", "l", "c", "z", "m", "w", "n", "s", "q", "t", "sq"];
 async function appGetInfo(photoId) {
-  const appContext = unsafeWindow?.appContext;
-  if (appContext) {
-    try {
-      const info = await appContext.getModel?.('photo-models', photoId);
-      if (info) {
-        console.debug('Got info from app');
-        return info;
-      }
-    } catch {
-      // returns undefined if await fails
+  let ds, owner, ownerId, licenseInfo;
+  try {
+    const info = await unsafeWindow.appContext.getModel('photo-models', photoId);
+    if (info.getValue) {
+      ds = info.getValue('descendingSizes');
+      owner = info.getValue('owner');
+      ownerId = owner?.getValue('id') || owner?.getValue('nsid') || owner?.getValue('url')?.split('/')[2];
+      licenseInfo = info.getPhotoLicenseInformation?.() || {};
+    } else {
+      const data = info.registry?._data?.[photoId];
+      const sizes = data?.sizes;
+      ds = Object.entries(sizes)
+        .map(([key, value]) => { return { ...value, key } })
+        .sort((a, b) => sizesOrder.indexOf(a) - sizesOrder.indexOf(b))
+        .reverse()
+      ownerId = data.owner?.id;
+      licenseInfo = {'value': data.license};
     }
+    if (ds) {
+      console.debug(`${photoId} : Got info from app`);
+      return {"descendingSizes": ds, "ownerId": ownerId, "licenseInfo": licenseInfo};
+    }
+  } catch(e) {
+    if (typeof e === 'object' && e.stat === 'fail') {
+      if (e.message === 'Photo not found') {
+        console.debug(`${photoId} : YUI said: "${e.message}". Photo might be locked or is private. Trying xhr.`);
+        return;
+      }
+      return e;
+    }
+    console.warn(e);
   }
 }
 
-async function fetchSizes(photoURL) {
-  console.debug('Fetching', photoURL);
-  try {
-    const p = await fetch(photoURL);
-    const html = await p.text();
-    const match = html.match(/descendingSizes":(\[.+?\])/);
-    const s = match?.[1];
-    if (s) {
-      console.debug('Got info from fetch');
-      return JSON.parse(s);
-    } else {
-      console.log("No regex match at photo url:", photoURL);
-    }
-  } catch (error) {
-    console.log("Fetch sizes failed with error:", error);
+async function xhrGetInfo(photoId, photoURL) {
+  console.debug(`${photoId} : Sending xhr: ${photoURL}`);
+  const response = await GM.xmlHttpRequest({
+    method: "GET",
+    url: photoURL
+  }).catch(e => {
+    console.log(`${photoId} : xhr error:`, e);
+    return;
+  });
+
+  const dsMatch = response.responseText?.match(/descendingSizes":(\[.+?\])/);
+  const ds = dsMatch?.[1];
+  if (ds) {
+    const licenseMatch = response.responseText?.match(/"license":(\d+)/);
+    const licenseInfo = {"value": licenseMatch?.[1]};
+    console.debug(`${photoId} : Got info from xhr`);
+    return {"descendingSizes": JSON.parse(ds), "ownerId": response.finalUrl.split('/')[4], "licenseInfo": licenseInfo};
+  } else {
+    let msg = `${photoId} : No regex match at url ${response.finalUrl}`;
+    if (response.finalUrl.endsWith('///')) msg += ' (photo not found)';
+    if (response.responseText.match(/This photo is private/)) msg += ' (photo is private)';
+    if (response.status != 200) msg += ` [status: ${response.status}]`;
+    console.log(msg);
   }
 }
 
@@ -241,7 +357,7 @@ function dl(downloadURL, downloadFilename) {
   let download;
   const checkStatus = (responseObject) => {
     const status = responseObject.status;
-    if (/^[45]/.test(status) || status == 0) /* Violentmonkey */ {
+    if (/^[045]/.test(status)) /* Violentmonkey */ {
       download.abort();
       console.warn('Download failed.', {responseObject});
       GM_notification(`URL: ${downloadURL}\n\nDownload failed with status code: ${status}`, scriptName);
@@ -256,61 +372,84 @@ function dl(downloadURL, downloadFilename) {
     url: downloadURL,
     name: downloadFilename,
     onprogress: (res) => { checkStatus(res) },
-    onerror: (res) => { checkStatus(res); },
+    onerror: (res) => { checkStatus(res) },
   });
 }
 
-async function populate(dropdownContent, href, nodeId) {
-  if (nodesPopulated.has(nodeId)) return;
-  nodesPopulated.add(nodeId);
+async function populate(data) {
+  if (nodesPopulated.has(data.node)) return;
+  nodesPopulated.add(data.node);
 
-  const components = href.split('/');
-  const scheme = components[0];
-  const photoId = components[5];
-  const photoURL = components.slice(0, 6).join('/');
-  const authorFromURL = components[4];
+  /* First try to get sizes info from the YUI `appContext` global variable.
+   * Some of this object's methods might not be available as the UserScripts API
+   * implementation may differ across userscript managers. For Chromium-based web
+   * browsers this shouldn't be an issue. However, if the YUI module is not
+   * available, a xhr will be sent as a fallback.
+   *
+   * Also, see note at the top of the file. */
 
-  let descendingSizes, appInfo;
-  if (cache[photoId]) {
-    console.debug('Got info from cache');
-    descendingSizes = cache[photoId].descendingSizes;
-  } else {
-    appInfo = await appGetInfo(photoId);
-    descendingSizes = appInfo?.getValue?.('descendingSizes') || await fetchSizes(photoURL);
+  const photoId = data.photoId;
+  const photoURL = data.photoURL;
+
+  const info = cache[photoId] || await appGetInfo(photoId) || await xhrGetInfo(photoId, photoURL);
+  const author = data.author || info?.ownerId;
+
+  let licenseInfo;
+  if (o.SHOW_LICENSE_INFO && info?.licenseInfo?.value != null) {
+    const licenseInfoValue = info.licenseInfo.value.toString();
+    if (licenseInfoValue) {
+      const isCompleteInfo = (info.licenseInfo.url != null) && (info.licenseInfo.text != null);
+      licenseInfo = isCompleteInfo ? info.licenseInfo : LICENSE_INFO.find((item => item.value === licenseInfoValue));
+    }
   }
+
+  let descendingSizes = info?.descendingSizes;
 
   if (!Array.isArray(descendingSizes)) {
-    console.log(`No sizes found for photo id ${photoId}.`, {descendingSizes});
-    return;
+    let failMessage = `${photoId} : No sizes found.`;
+    if (info?.message) {
+      failMessage += ` YUI said: ${info.message}`;
+    }
+    console.log(failMessage);
+    if (data.isImage) {
+      console.log(`${photoId} : Adding image src as sole entry.`);
+      const imageData = Object.create(null);
+      imageData.src = data.node.src;
+      imageData.width = data.node.getAttribute('width');
+      imageData.height = data.node.getAttribute('height');
+      imageData.key = '?';
+      descendingSizes = [imageData];
+    } else {
+      return;
+    }
   }
 
-  //const owner = appInfo?.getValue?.('owner');
-  //const ownerId = owner?.getValue?.('id') || owner?.getValue?.('nsid') || owner?.getValue?.('url')?.split('/')[2];
-  const author = authorFromURL;
-
   if (o.USE_CACHE && !cache[photoId]) {
-    console.debug('Adding to cache:', photoId);
-    cache[photoId] = {'descendingSizes': descendingSizes};
+    cache[photoId] = {'descendingSizes': descendingSizes, 'ownerId': author, 'licenseInfo': licenseInfo};
   }
 
   for (const item of descendingSizes) {
-    const imageUrl = item.url || item.src || item.displayUrl;
-    const filename = imageUrl.split('/').pop();
+    const imageURL = item.url || item.src || item.displayUrl;
+    if (!imageURL) {
+      console.log("descendingSizes item has no url");
+      continue;
+    }
+    const filename = imageURL.split('/').pop();
     const extension = filename.split('.').pop();
     const entry = document.createElement('div');
     entry.className = 'dmfl-dropdown-entry';
     const anchor = document.createElement('a');
     let downloadURL = '';
-    if (imageUrl.startsWith('//')) {
-      downloadURL += scheme;
+    if (imageURL.startsWith('//')) {
+      downloadURL += data.scheme;
     }
-    downloadURL += imageUrl.replace(/(\.[a-z]+)$/i, '_d$1');
-    anchor.setAttribute('href', imageUrl);
+    downloadURL += imageURL.replace(/(\.[a-z]+)$/i, '_d$1');
+    anchor.setAttribute('href', imageURL);
     anchor.textContent = `${item.width} x ${item.height} (${item.key})`;
     if (!extension.endsWith('jpg')) {
       anchor.textContent += ` [${extension}]`;
     }
-    const downloadFilename = o.PREPEND_AUTHOR_ID ? `${author}_-_${filename}` : filename;
+    const downloadFilename = author && o.PREPEND_AUTHOR_ID ? `${author}_-_${filename}` : filename;
     anchor.addEventListener('click', (event) => {
       dl(downloadURL, downloadFilename);
       event.preventDefault();
@@ -330,33 +469,95 @@ async function populate(dropdownContent, href, nodeId) {
         event.preventDefault();
       })
       previewBg.appendChild(previewDl);
+      if (licenseInfo) {
+        const previewLicenseInfo = document.createElement('a');
+        previewLicenseInfo.className = 'dmfl-preview-license-info';
+        previewLicenseInfo.setAttribute('href', licenseInfo.url);
+        previewLicenseInfo.innerText = `License: ${licenseInfo.text}`;
+        previewLicenseInfo.addEventListener('click', (event) => {
+          GM_openInTab(previewLicenseInfo.href, false);
+          event.preventDefault();
+          event.stopPropagation();
+        })
+        previewBg.appendChild(previewLicenseInfo);
+      }
       const previewImg = document.createElement('img');
       previewImg.className = 'dmfl-preview-image';
-      previewImg.src = imageUrl;
+      previewImg.src = imageURL;
       previewBg.onclick = () => { previewBg.remove() };
       previewBg.appendChild(previewImg);
       document.body.appendChild(previewBg);
     })
     entry.appendChild(previewContainer);
-    dropdownContent.appendChild(entry);
+    data.dropdownContent.appendChild(entry);
   }
 }
 
 function processNode(node) {
 
-  const nodeId = node.getAttribute('id');
-
-  if (nodesProcessed.has(nodeId) || node.querySelector('div.dmfl-dropdown-container')) return;
-
   const hasEngagementView = node.classList.contains('photo-engagement-view');
   const isMainPhotoPage = node.classList.contains('sub-photo-view') || hasEngagementView;
   const isLightbox = node.classList.contains('photo-card-engagement-view');
+  const isDiscussionsPage = node.closest('div[class="message-text"]') !== null;
 
-  const href = isMainPhotoPage || isLightbox ? document.URL : node.querySelector('a.overlay')?.href || node.querySelector('a')?.href;
-  if (!href || href.indexOf('/photos/') < 0) {
-    console.debug(`(ignore) No valid href at ${document.URL} for node with className "${node.className}", href: ${href}`);
+  const href = isMainPhotoPage || isLightbox ? document.URL :
+             isDiscussionsPage ? node.parentNode?.href :
+             node.querySelector('a.overlay')?.href || node.querySelector('a')?.href;
+
+  if (!href) {
+    /* Anchor elements aren't always available immediately.
+     * Wait for page scripts to add relevant nodes. */
     return;
   }
+
+  const photoIsLocked = (href.indexOf('flickr.com/gp/') >= 0);
+  const photoIsUnlocked = (href.indexOf('flickr.com/photos/') >= 0);
+
+  if (!photoIsLocked && !photoIsUnlocked) {
+    console.debug(`(ignore) No valid href at ${document.URL} for node with className "${node.className}", href: ${href}`);
+    if (isDiscussionsPage) nodesProcessed.add(node);
+    return;
+  }
+
+  if (isDiscussionsPage && /\/(albums|groups|galleries)\//.test(href)) {
+    nodesProcessed.add(node);
+    return;
+  }
+
+  const isImage = (node.nodeName === 'IMG');
+  if (isImage) {
+    if (!node.src || node.src.indexOf('static') < 0) return; // Image sources might be added dynamically
+    if (!/(live|farm[\d]*)\.static\.?flickr\.com\/[\d]+\/[\d]+_[a-z0-9]+(_[a-z0-9]{1,2})?\.[a-z0-9]{3,4}$/.test(node.src)) {
+      console.debug(`Not a valid image source "${node.src}"`, node);
+      nodesProcessed.add(node);
+      return;
+    }
+  }
+
+  const components = href.split('/');
+  const scheme = components[0];
+  const author = components[4];
+  const photoId = isImage ? node.src.split('/').pop().split('_')[0] : components[5];
+
+  if (!photoId) {
+    console.debug("No photo ID found while processing node", node);
+    nodesProcessed.add(node);
+    return;
+  }
+
+  if (!photoIsLocked && isNaN(Number(photoId))) {
+    console.debug(`Not a valid photoId "${photoId}"`, node);
+    nodesProcessed.add(node);
+    return;
+  }
+
+  components.length = Math.min(components.length, 5);
+  components.push(photoId);
+
+  const userSignedIn = Boolean(typeof unsafeWindow !== undefined ? unsafeWindow.appContext?.auth?.signedIn : null);
+  const photoURL = photoIsLocked ? href :
+                   userSignedIn ? `${window.location.origin}/photo.gne?id=${photoId}` :
+                   components.join('/').replace('/gp/', '/photos/');
 
   const dropdownContainer = document.createElement('div');
   const dropdownButton = document.createElement('div');
@@ -391,6 +592,20 @@ function processNode(node) {
     }
     dmflNodes.forEach(n => n.classList.add('dmfl-lightbox-page'));
     lightboxEngagement.appendChild(dropdownContainer);
+  } else if (isDiscussionsPage) {
+    const imgAnchor = node.parentNode;
+    const closestDiv = imgAnchor.closest('div');
+    let photoContainer = imgAnchor;
+    if (imgAnchor.parentNode.classList.contains('photo_container')) {
+      photoContainer = closestDiv;
+    }
+    const discContainer = document.createElement('div');
+    discContainer.className = 'dmfl-disc-container';
+    discContainer.appendChild(dropdownContainer);
+    dmflNodes.forEach(n => n.classList.add('dmfl-thumbnail-page'));
+    dropdownButton.textContent = o.BUTTON_TEXT_ON_THUMBNAIL;
+    photoContainer.parentNode.insertBefore(discContainer, photoContainer);
+    discContainer.appendChild(photoContainer);
   } else {
     // Photostream, albums, faves, galleries, search page, explore page
     dmflNodes.forEach(n => n.classList.add('dmfl-thumbnail-page'));
@@ -398,8 +613,17 @@ function processNode(node) {
     node.insertBefore(dropdownContainer, node.firstChild);
   }
 
+  const data = Object.create(null);
+  data.node = node;
+  data.scheme = scheme;
+  data.author = author;
+  data.isImage = isImage;
+  data.photoId = photoId;
+  data.photoURL = photoURL;
+  data.dropdownContent = dropdownContent;
+
   if (o.IMMEDIATE) {
-    populate(dropdownContent, href, nodeId);
+    populate(data);
   }
 
   const zIndexDefault = node.style.getPropertyValue('z-index');
@@ -409,18 +633,18 @@ function processNode(node) {
     mouseEnterCount += 1;
     node.style.zIndex = '9999';
     if (mouseEnterCount > 1 || dropdownContent.querySelectorAll('a').length > 0) return;
-    populate(dropdownContent, href, nodeId);
+    populate(data);
   });
 
   dropdownContainer.addEventListener("mouseleave", () => {
     node.style.zIndex = zIndexDefault;
   });
 
-  nodesProcessed.add(nodeId);
+  nodesProcessed.add(node);
 }
 
 
-const style = `
+const STYLE = `
   /*
    =================
   | Dropdown widget |
@@ -511,6 +735,15 @@ const style = `
     bottom: 20px;
   }
 
+  .dmfl-preview-license-info {
+    display: flex;
+    color: honeydew !important;
+    position: fixed;
+    z-index: 30001;
+    left: 20px;
+    bottom: 20px;
+  }
+
   .dmfl-dropdown-content a:hover {
     background-color: ${o.CONTENT_A_HOVER_BG_COLOR};
   }
@@ -590,6 +823,10 @@ const style = `
     position: absolute;
     right: 0;
     bottom: ${o.BUTTON_HEIGHT};
+  }
+
+  .dmfl-disc-container {
+    position: relative;
   }
 
 
@@ -710,8 +947,6 @@ const style = `
   }
 `;
 
-console.log('Adding styles.');
-GM_addStyle(style);
 
 const modalHTML = `
 <form class="dmfl-modal-content" method="dialog">
@@ -838,16 +1073,47 @@ const INSERT_LOCATIONS = [
   'div.photo-list-description-view',
   'div.photo-card-engagement-view',
   'div.photo-engagement-view', /* Main page, Lighbox page */
+  'div.group-discussion-topic-view .message-text img', /* Discussions page */
 ].join(', ');
 
 
-console.log("Starting timer.");
-
 // Ensure that the previous interval has completed before recursing
-(function main() {
+function main() {
   setTimeout(() => {
-    document.querySelectorAll(INSERT_LOCATIONS).forEach(node => { processNode(node) });
+    document.querySelectorAll(INSERT_LOCATIONS).forEach(node => {
+      if (!nodesProcessed.has(node)) processNode(node);
+    });
     main();
   }, o.UPDATE_INTERVAL);
-})();
+}
 
+
+let appInitRetryCount = 0;
+let appInitOk = false;
+async function appInit() {
+  if (typeof unsafeWindow !== undefined) {
+    while (!appInitOk) {
+      if (!unsafeWindow.appContext?.getModel) {
+        appInitRetryCount++;
+        if (appInitRetryCount == 10) break;
+        console.log("Waiting for YUI appContext...");
+        await sleep(1000);
+      } else {
+        appInitOk = true;
+      }
+    }
+  }
+  if (!appInitOk) {
+    console.log("YUI failed to init. Running in xhr mode.");
+  } else {
+    console.log("YUI app ready.");
+  }
+}
+
+(async () => {
+  await appInit();
+  console.log('Adding styles.');
+  GM_addStyle(STYLE);
+  console.log("Starting timer.");
+  main();
+})();
