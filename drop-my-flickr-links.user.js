@@ -15,7 +15,7 @@
 // @grant       GM_notification
 // @grant       GM.xmlHttpRequest
 // @grant       GM_registerMenuCommand
-// @version     1.5
+// @version     1.5.1
 // @icon        https://www.google.com/s2/favicons?sz=64&domain=flickr.com
 // @description Creates a hoverable dropdown menu that shows links to all available sizes for Flickr photos.
 // ==/UserScript==
@@ -224,6 +224,10 @@ const nodesProcessed = new Set();
 const nodesPopulated = new Set();
 const cache = Object.create(null);
 
+let appInitOk = false;
+let appInitRetryCount = 0;
+
+
 const LICENSE_INFO = [
   {
     value: '0',
@@ -293,6 +297,7 @@ function sleep(ms) {
 
 const sizesOrder = ["o", "8k", "7k", "6k", "5k", "4k", "3k", "k", "h", "l", "c", "z", "m", "w", "n", "s", "q", "t", "sq"];
 async function appGetInfo(photoId) {
+  if (!appInitOk) return;
   let ds, owner, ownerId, licenseInfo;
   try {
     const info = await unsafeWindow.appContext.getModel('photo-models', photoId);
@@ -304,10 +309,14 @@ async function appGetInfo(photoId) {
     } else {
       const data = info.registry?._data?.[photoId];
       const sizes = data?.sizes;
+      if (!sizes) {
+        console.debug(`${photoId} : No sizes data in app registry`);
+        return;
+      }
       ds = Object.entries(sizes)
         .map(([key, value]) => { return { ...value, key } })
         .sort((a, b) => sizesOrder.indexOf(a) - sizesOrder.indexOf(b))
-        .reverse()
+        .reverse();
       ownerId = data.owner?.id;
       licenseInfo = {'value': data.license};
     }
@@ -1088,8 +1097,6 @@ function main() {
 }
 
 
-let appInitRetryCount = 0;
-let appInitOk = false;
 async function appInit() {
   if (typeof unsafeWindow !== undefined) {
     while (!appInitOk) {
