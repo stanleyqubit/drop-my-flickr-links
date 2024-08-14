@@ -1080,8 +1080,9 @@ const INSERT_LOCATIONS = [
   'div.photo-list-tile-view',
   'div.photo-list-gallery-photo-view',
   'div.photo-list-description-view',
-  'div.photo-card-engagement-view',
-  'div.photo-engagement-view', /* Main page, Lighbox page */
+  'div.photo-list-view > .photo-card-view',
+  'div.foot-overlay .photo-card-engagement-view', /* Lightbox page */
+  'div.photo-content-upper-container .photo-engagement-view', /* Main page */
   'div.group-discussion-topic-view .message-text img', /* Discussions page */
 ].join(', ');
 
