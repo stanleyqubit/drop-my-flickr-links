@@ -3,7 +3,7 @@
 - Hover your mouse over the dropdown button to display links to all sizes variants for any Flickr photo.
 - Left-click on a link to download the photo.
 - Left-click on the "&#8862;" to enter preview mode.
-- Widget to rotate, zoom in/out, toggle between fit to screen view and full-size view
+- Widget to rotate, zoom in/out, toggle between fit to screen view and full-size view.
 - Configurable keybindings in the settings.
 - Left-click on the dropdown button to display the settings menu.
 
