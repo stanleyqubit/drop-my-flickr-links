@@ -1029,7 +1029,7 @@ function showMessage(text, duration, container) {
   container.textContent = text;
   container.style.visibility = 'visible';
   container.style.opacity = 1;
-  clearTimeout(messages[container]);
+  clearTimeout(messages[container.className]);
   const messageTimeoutId = setTimeout(() => {
     container.style.opacity = 0;
     setTimeout(() => {
@@ -1038,7 +1038,7 @@ function showMessage(text, duration, container) {
       container.textContent = '';
     }, 350);
   }, duration);
-  messages[container] = messageTimeoutId;
+  messages[container.className] = messageTimeoutId;
 }
 
 
