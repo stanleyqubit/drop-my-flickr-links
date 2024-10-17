@@ -915,6 +915,7 @@ const STYLE = `
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    z-index: 30002;
   }
 
   .dmfl-loader {
