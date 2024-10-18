@@ -5,6 +5,8 @@
 // @author      stanleyqubit
 // @compatible  firefox Tampermonkey with UserScripts API Dynamic
 // @compatible  chrome Violentmonkey or Tampermonkey
+// @compatible  edge Violentmonkey or Tampermonkey
+// @compatible  opera Tampermonkey
 // @match       *://*.flickr.com/*
 // @connect     www.flickr.com
 // @run-at      document-start
