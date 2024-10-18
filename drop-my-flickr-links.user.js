@@ -524,7 +524,9 @@ const STYLE = `
   .dmfl-preview-controls-container {
     display: flex;
     align-items: center;
-    font-size: 2rem;
+    font-family: monospace;
+    font-size: 30px;
+    line-height: 1;
     position: fixed;
     top: 20px;
     left: 20px;
@@ -574,6 +576,7 @@ const STYLE = `
 
   .dmfl-preview-controls-main-button:hover .dmfl-preview-controls-button-strip {
     display: inline-flex;
+    justify-content: space-evenly;
     width: 100%;
     margin-left: 50px;
   }
@@ -648,20 +651,23 @@ const STYLE = `
   }
 
   .dmfl-preview-download-button {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 2rem;
+    display: block;
+    text-align: center;
+    text-decoration: underline;
+    font-size: 35px;
+    font-weight: bold;
     height: 50px;
     width: 50px;
-    color: honeydew !important;
+    line-height: 50px;
+    color: honeydew;
     background-color: ${o.BUTTON_BG_COLOR};
     position: fixed;
     z-index: 30001;
     right: 20px;
     bottom: 20px;
     border-radius: 10px;
-    opacity: .75;
+    opacity: .7;
+    cursor: pointer;
   }
 
   .dmfl-preview-download-button:hover {
@@ -1356,7 +1362,7 @@ class PreviewMode {
 
     document.body.appendChild(bg);
 
-    const dlBut = document.createElement('a');
+    const dlBut = document.createElement('span');
     dlBut.className = 'dmfl-preview-download-button';
     dlBut.innerText = '\u21e3';
     dlBut.onclick = (e) => {
