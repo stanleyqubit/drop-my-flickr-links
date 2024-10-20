@@ -570,8 +570,9 @@ const STYLE = `
     --dmfl-preview-controls-opacity: 0;
     display: flex;
     align-items: center;
-    font-family: auto;
+    font-family: sans-serif, auto;
     font-size: ${o.PREVIEW_MODE_ICON_WIDTH * 0.7}px;
+    line-height: 1;
     color: ${o.PREVIEW_MODE_ICON_FILL_COLOR};
     border-radius: 10px;
     background-color: #7a8191;
@@ -711,11 +712,12 @@ const STYLE = `
     justify-content: center;
     text-align: center;
     text-decoration: underline;
+    font-family: sans-serif, auto;
     font-size: ${o.PREVIEW_MODE_ICON_WIDTH * 0.7}px;
     font-weight: bold;
+    line-height: 1;
     height: ${o.PREVIEW_MODE_ICON_WIDTH}px;
     width: ${o.PREVIEW_MODE_ICON_WIDTH}px;
-    line-height: ${o.PREVIEW_MODE_ICON_WIDTH}px;
     color: ${o.PREVIEW_MODE_ICON_FILL_COLOR};
     background-color: ${o.BUTTON_BG_COLOR};
     position: fixed;
