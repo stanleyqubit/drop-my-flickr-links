@@ -18,7 +18,7 @@
 // @grant       GM_notification
 // @grant       GM.xmlHttpRequest
 // @grant       GM_registerMenuCommand
-// @version     2.0
+// @version     2.1
 // @icon        https://www.google.com/s2/favicons?sz=64&domain=flickr.com
 // @description Creates a hoverable dropdown menu that shows links to all available sizes for Flickr photos.
 // ==/UserScript==
