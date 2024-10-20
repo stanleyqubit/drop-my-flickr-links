@@ -570,7 +570,6 @@ const STYLE = `
     --dmfl-preview-controls-opacity: 0;
     display: flex;
     align-items: center;
-    font-family: sans-serif, auto;
     font-size: ${o.PREVIEW_MODE_ICON_WIDTH * 0.7}px;
     line-height: 1;
     color: ${o.PREVIEW_MODE_ICON_FILL_COLOR};
@@ -712,7 +711,6 @@ const STYLE = `
     justify-content: center;
     text-align: center;
     text-decoration: underline;
-    font-family: sans-serif, auto;
     font-size: ${o.PREVIEW_MODE_ICON_WIDTH * 0.7}px;
     font-weight: bold;
     line-height: 1;
