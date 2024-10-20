@@ -4,14 +4,16 @@
 - Left-click on a link to download the photo.
 - Left-click on the "&#8862;" to enter preview mode.
 - Widget to rotate, zoom in/out, toggle between fit to screen view and full-size view.
-- Configurable keybindings in the settings.
+- Choose your color palette.
+- Customizable keybindings in the settings.
 - Left-click on the dropdown button to display the settings menu.
 
 Tested and compatible with:
 
-- Chrome + Violentmonkey
-- Chrome + Tampermonkey
+- Chrome + Violentmonkey/Tampermonkey
+- Edge + Violentmonkey/Tampermonkey
 - Firefox + Tampermonkey w/ Content Script API option set to "UserScripts API Dynamic"
+- Opera + Tampermonkey
 
 Thumbnails view:
 
