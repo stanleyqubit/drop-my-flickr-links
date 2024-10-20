@@ -74,75 +74,6 @@ const defaultSettings = {
     name: 'Prepend author ID to downloaded image file name',
     desc: 'Self-explanatory.',
   },
-  SHOW_LICENSE_INFO: {
-    type: "boolean",
-    value: true,
-    name: 'Show license information',
-    desc: 'Shows a hyperlink to the photo\'s license when in preview mode.',
-  },
-
-  PREVIEW_MODE_SHOW_CONTROLS: {
-    type: "boolean",
-    value: true,
-    name: 'Show preview controls',
-    desc: 'Adds a widget for image control when in preview mode.',
-  },
-  PREVIEW_MODE_SHOW_CLOSE_BUTTON: {
-    type: "boolean",
-    value: true,
-    name: 'Show preview mode close button',
-    desc: 'Adds a clickable close button to the top right corner when in preview mode.',
-  },
-
-  PREVIEW_MODE_SCROLL_TO_ZOOM: {
-    type: "boolean",
-    value: true,
-    name: 'Preview mode zoom on mouse scroll',
-    desc: 'Zoom the preview image with the mouse wheel.',
-  },
-  PREVIEW_MODE_EXIT_ON_MOUSE_EVENT: {
-    type: "select",
-    value: 'dblclick',
-    name: 'Preview mode exit on mouse event',
-    desc: 'Exits preview mode on this mouse event.',
-    opts: {'dblclick': "Double click", 'click': "Click", '': "None"},
-  },
-  PREVIEW_MODE_EXIT_KB: {
-    type: "kbd",
-    value: {enabled: true, keyCode: 27, key: "Escape", modifierKeys: []},
-    name: 'Preview mode exit on key',
-    desc: 'Exits preview mode when this key is pressed.',
-  },
-  PREVIEW_MODE_ROTATE_CW_KB: {
-    type: "kbd",
-    value: {enabled: true, keyCode: 190, key: ">", modifierKeys: ["shiftKey"]},
-    name: 'Preview mode rotate clockwise key',
-    desc: 'Rotates the preview image 90 degrees clockwise when this key is pressed.',
-  },
-  PREVIEW_MODE_ROTATE_CCW_KB: {
-    type: "kbd",
-    value: {enabled: true, keyCode: 188, key: "<", modifierKeys: ["shiftKey"]},
-    name: 'Preview mode rotate counter-clockwise key',
-    desc: 'Rotates the preview image 90 degrees counter-clockwise when this key is pressed.',
-  },
-  PREVIEW_MODE_ZOOM_IN_KB: {
-    type: "kbd",
-    value: {enabled: true, keyCode: 107, key: "+", modifierKeys: []}, // Numpad "+" key.
-    name: 'Preview mode zoom in key',
-    desc: 'Zooms in the preview image when this key is pressed.',
-  },
-  PREVIEW_MODE_ZOOM_OUT_KB: {
-    type: "kbd",
-    value: {enabled: true, keyCode: 109, key: "-", modifierKeys: []}, // Numpad "-" key.
-    name: 'Preview mode zoom out key',
-    desc: 'Zooms out the preview image when this key is pressed.',
-  },
-  PREVIEW_MODE_TOGGLE_FIT_KB: {
-    type: "kbd",
-    value: {enabled: true, keyCode: 106, key: "*", modifierKeys: []}, // Numpad "*" key.
-    name: 'Preview mode toggle fullsize key',
-    desc: 'Toggles the preview image between full size view and fit to screen view when this key is pressed.',
-  },
 
   /* Dropdown button appearance */
 
@@ -233,6 +164,104 @@ const defaultSettings = {
     name: 'Dropdown menu preview element background color on hover',
     desc: 'CSS color value.',
   },
+
+  /* Preview mode */
+
+  PREVIEW_MODE_SHOW_CONTROLS: {
+    type: "boolean",
+    value: true,
+    name: 'Preview mode show image controls',
+    desc: 'Adds a widget for image control when in preview mode.',
+  },
+  PREVIEW_MODE_SHOW_CLOSE_BUTTON: {
+    type: "boolean",
+    value: true,
+    name: 'Preview mode show close button',
+    desc: 'Adds a clickable close button to the top right corner when in preview mode.',
+  },
+  PREVIEW_MODE_SHOW_LICENSE_INFO: {
+    type: "boolean",
+    value: true,
+    name: 'Preview mode show license information',
+    desc: 'Shows a hyperlink to the photo\'s license when in preview mode.',
+  },
+  PREVIEW_MODE_ICON_WIDTH: {
+    type: "number",
+    value: 50,
+    min: 30,
+    max: 150,
+    step: 1,
+    name: 'Preview mode icon size',
+    desc: 'CSS pixel unit value.',
+  },
+  PREVIEW_MODE_ICON_FILL_COLOR: {
+    type: "text",
+    value: '#f0fff0', /* honeydew */
+    name: 'Preview mode icon fill color',
+    desc: 'Fill color for the vector graphic shown inside the icon. CSS color value.',
+  },
+  /*
+  PREVIEW_MODE_ICON_SVG_SCALE: {
+    type: "number",
+    value: 0.6,
+    min: 0.1,
+    max: 0.8,
+    step: 0.1,
+    name: 'Preview mode icon SVG scale',
+    desc: 'Scale of the SVG relative to the icon size. This value is multiplied ' +
+          'by the preview mode icon size in order to obtain the width and height ' +
+          'of the vector graphic displayed inside the icon.',
+  },
+  */
+  PREVIEW_MODE_SCROLL_TO_ZOOM: {
+    type: "boolean",
+    value: true,
+    name: 'Preview mode zoom on mouse scroll',
+    desc: 'Zoom the preview image with the mouse wheel.',
+  },
+  PREVIEW_MODE_EXIT_ON_MOUSE_EVENT: {
+    type: "select",
+    value: 'dblclick',
+    name: 'Preview mode exit on mouse event',
+    desc: 'Exits preview mode on this mouse event.',
+    opts: {'dblclick': "Double click", 'click': "Click", '': "None"},
+  },
+  PREVIEW_MODE_EXIT_KB: {
+    type: "kbd",
+    value: {enabled: true, keyCode: 27, key: "Escape", modifierKeys: []},
+    name: 'Preview mode exit on key',
+    desc: 'Exits preview mode when this key is pressed.',
+  },
+  PREVIEW_MODE_ROTATE_CW_KB: {
+    type: "kbd",
+    value: {enabled: true, keyCode: 190, key: ">", modifierKeys: ["shiftKey"]},
+    name: 'Preview mode rotate clockwise key',
+    desc: 'Rotates the preview image 90 degrees clockwise when this key is pressed.',
+  },
+  PREVIEW_MODE_ROTATE_CCW_KB: {
+    type: "kbd",
+    value: {enabled: true, keyCode: 188, key: "<", modifierKeys: ["shiftKey"]},
+    name: 'Preview mode rotate counter-clockwise key',
+    desc: 'Rotates the preview image 90 degrees counter-clockwise when this key is pressed.',
+  },
+  PREVIEW_MODE_ZOOM_IN_KB: {
+    type: "kbd",
+    value: {enabled: true, keyCode: 107, key: "+", modifierKeys: []}, // Numpad "+" key.
+    name: 'Preview mode zoom in key',
+    desc: 'Zooms in the preview image when this key is pressed.',
+  },
+  PREVIEW_MODE_ZOOM_OUT_KB: {
+    type: "kbd",
+    value: {enabled: true, keyCode: 109, key: "-", modifierKeys: []}, // Numpad "-" key.
+    name: 'Preview mode zoom out key',
+    desc: 'Zooms out the preview image when this key is pressed.',
+  },
+  PREVIEW_MODE_TOGGLE_FIT_KB: {
+    type: "kbd",
+    value: {enabled: true, keyCode: 106, key: "*", modifierKeys: []}, // Numpad "*" key.
+    name: 'Preview mode toggle fullsize key',
+    desc: 'Toggles the preview image between full size view and fit to screen view when this key is pressed.',
+  },
 }
 
 
@@ -321,6 +350,11 @@ const LICENSE_INFO = [
   }
 ];
 
+const canSvg = !!(document.createElementNS && document.createElementNS('http://www.w3.org/2000/svg', 'svg').createSVGRect);
+
+const SVG_WIDTH = o.PREVIEW_MODE_ICON_WIDTH * (o.PREVIEW_MODE_ICON_SVG_SCALE || 0.6);
+const SVG_FILL = o.PREVIEW_MODE_ICON_FILL_COLOR;
+
 const STYLE = `
 
   :root.dmfl-preview-mode, .dmfl-modal-mode {
@@ -373,7 +407,7 @@ const STYLE = `
     height: ${o.BUTTON_WIDTH}px;
     justify-content: center;
     align-items: center;
-    font-size: calc(${o.BUTTON_WIDTH}px * 75 / 100);
+    font-size: calc(${o.BUTTON_WIDTH}px * 0.75);
     color: ${o.BUTTON_TEXT_COLOR};
     background-color: ${o.BUTTON_BG_COLOR};
     opacity: ${o.BUTTON_OPACITY};
@@ -500,8 +534,8 @@ const STYLE = `
   }
 
   .dmfl-preview-image {
-    --translateX: 0;
-    --translateY: 0;
+    --dmfl-preview-image-translateX: 0;
+    --dmfl-preview-image-translateY: 0;
     cursor: grab;
     max-width: none;
     max-height: none;
@@ -509,7 +543,7 @@ const STYLE = `
     height: auto;
     display: block;
     margin: 0;
-    translate: var(--translateX) var(--translateY);
+    translate: var(--dmfl-preview-image-translateX) var(--dmfl-preview-image-translateY);
   }
 
   .dmfl-preview-image.dmfl-fit {
@@ -523,80 +557,84 @@ const STYLE = `
     max-height: 100vw;
   }
 
+  .dmfl-svg.dmfl-svg-pm-dlbut, .dmfl-preview-background svg[class*=dmfl-svg-pm-pc] {
+    width: ${SVG_WIDTH}px;
+    height: ${SVG_WIDTH}px;
+  }
+
+  .dmfl-preview-background svg[class*=dmfl-svg-pm-]:not(.dmfl-svg-pm-closebut) > .dmfl-svg-path {
+    fill: ${SVG_FILL};
+  }
+
   .dmfl-preview-controls-container {
+    --dmfl-preview-controls-opacity: 0;
     display: flex;
     align-items: center;
-    font-family: monospace;
-    font-size: 30px;
-    line-height: 1;
+    font-family: auto;
+    font-size: ${o.PREVIEW_MODE_ICON_WIDTH * 0.7}px;
+    color: ${o.PREVIEW_MODE_ICON_FILL_COLOR};
+    border-radius: 10px;
+    background-color: #7a8191;
     position: fixed;
     top: 20px;
     left: 20px;
     z-index: 30001;
-    color: honeydew;
     cursor: pointer;
-    opacity: 0;
-    transition: opacity 1s;
+    opacity: var(--dmfl-preview-controls-opacity);
+    transition: all 1s;
   }
 
-  .dmfl-preview-controls-main-button {
-    display: flex;
-    justify-content: left;
-    align-items: center;
-    width: 50px;
-    height: 50px;
-    background-color: #7a8191;
-    border-radius: 10px;
+  .dmfl-preview-controls-rubberband {
+    display: inline-flex;
+    justify-content: space-around;
+    width: 0px;
+    height: ${o.PREVIEW_MODE_ICON_WIDTH}px;
     opacity: .35;
     transition: all 0.5s ease-out;
   }
 
-  .dmfl-preview-controls-main-button:hover {
-    width: 350px;
-    background-color: #586887;
-    opacity: 1;
+  .dmfl-preview-controls-rubberband > span {
+    align-self: center;
   }
 
-  .dmfl-preview-controls-main-button > span {
-    position: absolute;
-    display: flex;
+  .dmfl-preview-controls-main-button {
+    display: inline-flex;
+    width: ${o.PREVIEW_MODE_ICON_WIDTH}px;
+    height: ${o.PREVIEW_MODE_ICON_WIDTH}px;
+    margin: 0;
     justify-content: center;
     align-items: center;
-    width: 50px;
-    height: 50px;
     rotate: 0deg;
     transition: rotate 0.5s linear;
   }
 
-  .dmfl-preview-controls-main-button:hover > span {
-    rotate: 90deg;
-  }
-
-  .dmfl-preview-controls-button-strip {
+  .dmfl-preview-controls-rubberband > span:not(.dmfl-preview-controls-main-button) {
     display: none;
-  }
-
-  .dmfl-preview-controls-main-button:hover .dmfl-preview-controls-button-strip {
-    display: inline-flex;
-    justify-content: space-evenly;
-    width: 100%;
-    margin-left: 50px;
-  }
-
-  .dmfl-preview-controls-button-strip > span {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 50px;
-    height: 50px;
     opacity: 0;
     transform-origin: bottom;
-    transform: translateY(50px);
+    transform: translateY(${o.PREVIEW_MODE_ICON_WIDTH}px);
     animation-name: dmfl-preview-controls-anim;
     animation-timing-function: ease-out;
     animation-fill-mode: forwards;
     animation-duration: 0.2s;
-    margin-right: 10px;
+  }
+
+  .dmfl-preview-controls-container:hover .dmfl-preview-controls-rubberband {
+    width: ${o.PREVIEW_MODE_ICON_WIDTH * 6}px;
+    opacity: 1;
+  }
+
+  .dmfl-preview-controls-container:hover {
+    opacity: 1;
+    background-color: #586887;
+  }
+
+  .dmfl-preview-controls-container:hover .dmfl-preview-controls-main-button {
+    rotate: 90deg;
+  }
+
+  .dmfl-preview-controls-container:hover .dmfl-preview-controls-rubberband > span:not(.dmfl-preview-controls-main-button) {
+    display: inline-flex;
   }
 
   .dmfl-preview-controls-rot-cw {
@@ -619,8 +657,12 @@ const STYLE = `
     animation-delay: 0.7s;
   }
 
-  .dmfl-preview-controls-button-strip > span:hover {
+  .dmfl-preview-controls-rubberband > span:not(.dmfl-preview-controls-main-button):hover {
     color: #7fffd4; /* aquamarine */
+  }
+
+  .dmfl-preview-controls-rubberband > span:not(.dmfl-preview-controls-main-button):hover .dmfl-svg-path {
+    fill: #7fffd4;
   }
 
   @keyframes dmfl-preview-controls-anim {
@@ -633,16 +675,18 @@ const STYLE = `
   .dmfl-preview-close-button {
     position: absolute;
     display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
-    width: 2.5rem;
-    height: 2.5rem;
+    align-items: ${canSvg ? 'center' : 'flex-end'};
+    justify-content: ${canSvg ? 'center' : 'flex-end'};
+    width: ${o.PREVIEW_MODE_ICON_WIDTH}px;
+    height: ${o.PREVIEW_MODE_ICON_WIDTH}px;
     top: 20px;
     right: 20px;
-    font-size: 2.5rem;
+    font-size: ${o.PREVIEW_MODE_ICON_WIDTH}px;
     font-weight: bold;
-    color: honeydew;
-    opacity: .65;
+    color: ${o.PREVIEW_MODE_ICON_FILL_COLOR};
+    background-color: ${canSvg ? '#7a8191' : 'unset'};
+    border-radius: 10px;
+    opacity: .3;
     text-shadow: 1px 1px 1px black;
     z-index: 30001;
     cursor: pointer;
@@ -650,18 +694,29 @@ const STYLE = `
 
   .dmfl-preview-close-button:hover {
     color: #f3c84b;
+    opacity: .8;
+  }
+
+  .dmfl-preview-close-button .dmfl-svg {
+    fill: ${SVG_FILL};
+  }
+
+  .dmfl-preview-close-button:hover .dmfl-svg {
+    fill: #f3c84b;
   }
 
   .dmfl-preview-download-button {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     text-decoration: underline;
-    font-size: 35px;
+    font-size: ${o.PREVIEW_MODE_ICON_WIDTH * 0.7}px;
     font-weight: bold;
-    height: 50px;
-    width: 50px;
-    line-height: 50px;
-    color: honeydew;
+    height: ${o.PREVIEW_MODE_ICON_WIDTH}px;
+    width: ${o.PREVIEW_MODE_ICON_WIDTH}px;
+    line-height: ${o.PREVIEW_MODE_ICON_WIDTH}px;
+    color: ${o.PREVIEW_MODE_ICON_FILL_COLOR};
     background-color: ${o.BUTTON_BG_COLOR};
     position: fixed;
     z-index: 30001;
@@ -679,7 +734,7 @@ const STYLE = `
 
   .dmfl-preview-license-info-anchor {
     display: flex;
-    color: honeydew !important;
+    color: #fff !important;
     position: fixed;
     z-index: 30001;
     left: 20px;
@@ -885,17 +940,17 @@ const STYLE = `
   }
 
   .dmfl-message-container-topleft {
-    box-sizing: content-box;
+    --dmfl-mc-topleft-minwidth: max(50px, ${o.PREVIEW_MODE_ICON_WIDTH}px);
+    box-sizing: border-box;
     border-radius: 10px;
-    top: ${o.PREVIEW_MODE_SHOW_CONTROLS ? 80 : 20}px;
+    top: ${o.PREVIEW_MODE_SHOW_CONTROLS ? `${o.PREVIEW_MODE_ICON_WIDTH + 30}` : 20}px;
     left: 20px;
-    width: 44px;
-    height: 44px;
-    max-width: 100%;
+    width: var(--dmfl-mc-topleft-minwidth);
+    height: var(--dmfl-mc-topleft-minwidth);
     background-color: rgba(95, 129, 191, 0.7);
-    font-size: 1.1rem;
+    font-size: calc(var(--dmfl-mc-topleft-minwidth) * 0.3);
     font-weight: 500;
-    padding: 2px;
+    white-space: nowrap;
   }
 
   .dmfl-message-container-bottom {
@@ -1003,6 +1058,9 @@ let lightboxIntervalID = null;
 let overlayContainer;
 let messageContainerBottom;
 let messageContainerTopleft;
+let previewControlsContainer;
+let previewDlButton;
+let previewCloseButton;
 
 let appInitOk = false;
 let appInitComplete = false;
@@ -1050,19 +1108,83 @@ function showMessage(text, duration, container) {
   messages[container.className] = messageTimeoutId;
 }
 
+const ICONS = {
+  "default": {
+  /*
+   * https://www.svgrepo.com/collection/chunk-16px-thick-interface-icons/
+   * Author: Noah Jacobus
+   * Website: https://noahjacob.us/
+   * License: PD */
+    pm_close_but:
+      `<!-- Uploaded to: SVG Repo, www.svgrepo.com, Transformed by: SVG Repo Mixer Tools -->
+      <svg class="dmfl-svg dmfl-svg-pm-closebut" height="70%" width="70%" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-5.29 -5.29 186.84 186.84" xml:space="preserve">
+      <g id="SVGRepo_bgCarrier" stroke-width="0"/>
+      <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#252323" stroke-width="5.288">
+      <path class="dmfl-svg-path dmfl-svg-pm-closebut" d="M0,143.124L54.994,88.13L0,33.136L33.135,0L88.13,54.995L143.125,0l33.135,33.136L121.266,88.13l54.994,54.994 l-33.135,33.136L88.13,121.265L33.135,176.26L0,143.124z"/> </g>
+      <g id="SVGRepo_iconCarrier">
+      <path class="dmfl-svg-path dmfl-svg-pm-closebut" d="M0,143.124L54.994,88.13L0,33.136L33.135,0L88.13,54.995L143.125,0l33.135,33.136L121.266,88.13l54.994,54.994 l-33.135,33.136L88.13,121.265L33.135,176.26L0,143.124z"/> </g>
+      </svg>`
+    ,
+    pm_dl_but:
+      `<?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+      <svg class="dmfl-svg dmfl-svg-pm-dlbut" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path class="dmfl-svg-path dmfl-svg-pm-dlbut" d="M13 7H10V0H6V7L3 7V8L8 13L13 8V7Z"/>
+      <path class="dmfl-svg-path dmfl-svg-pm-dlbut" d="M14 14H2V16H14V14Z"/>
+      </svg>`
+    ,
+    pc_main:
+      `<?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+      <svg class="dmfl-svg dmfl-svg-pm-pc-main" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path class="dmfl-svg-path dmfl-svg-pm-pc-main" fill-rule="evenodd" clip-rule="evenodd" d="M6.50001 0H9.50001L10.0939 2.37548C10.7276 2.6115 11.3107 2.95155 11.8223 3.37488L14.1782 2.70096L15.6782 5.29904L13.9173 7.00166C13.9717 7.32634 14 7.65987 14 8C14 8.34013 13.9717 8.67366 13.9173 8.99834L15.6782 10.701L14.1782 13.299L11.8223 12.6251C11.3107 13.0484 10.7276 13.3885 10.0939 13.6245L9.50001 16H6.50001L5.90614 13.6245C5.27242 13.3885 4.68934 13.0484 4.17768 12.6251L1.82181 13.299L0.321808 10.701L2.08269 8.99834C2.02831 8.67366 2.00001 8.34013 2.00001 8C2.00001 7.65987 2.02831 7.32634 2.08269 7.00166L0.321808 5.29904L1.82181 2.70096L4.17768 3.37488C4.68934 2.95155 5.27241 2.6115 5.90614 2.37548L6.50001 0ZM8.00001 10C9.10458 10 10 9.10457 10 8C10 6.89543 9.10458 6 8.00001 6C6.89544 6 6.00001 6.89543 6.00001 8C6.00001 9.10457 6.89544 10 8.00001 10Z"/>
+      </svg>`
+    ,
+    pc_rotcw:
+      `<?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+      <svg class="dmfl-svg dmfl-svg-pm-pc-rotcw" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path class="dmfl-svg-path dmfl-svg-pm-pc-rotcw" d="M10 7L9 6L11.2929 3.70711L10.8013 3.21553C10.023 2.43724 8.96744 2 7.86677 2C4.63903 2 2 4.68015 2 7.93274C2 11.2589 4.69868 14 8 14C9.53708 14 11.0709 13.4144 12.2426 12.2426L13.6569 13.6569C12.095 15.2188 10.0458 16 8 16C3.56933 16 0 12.3385 0 7.93274C0 3.60052 3.50968 0 7.86677 0C9.49787 0 11.0622 0.647954 12.2155 1.80132L12.7071 2.29289L15 0L16 1V7H10Z"/>
+      </svg>`
+    ,
+    pc_rotccw:
+      `<?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+      <svg class="dmfl-svg dmfl-svg-pm-pc-rotccw" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path class="dmfl-svg-path dmfl-svg-pm-pc-rotccw" d="M6 7L7 6L4.70711 3.70711L5.19868 3.21553C5.97697 2.43724 7.03256 2 8.13323 2C11.361 2 14 4.68015 14 7.93274C14 11.2589 11.3013 14 8 14C6.46292 14 4.92913 13.4144 3.75736 12.2426L2.34315 13.6569C3.90505 15.2188 5.95417 16 8 16C12.4307 16 16 12.3385 16 7.93274C16 3.60052 12.4903 0 8.13323 0C6.50213 0 4.93783 0.647954 3.78447 1.80132L3.29289 2.29289L1 0L0 1V7H6Z"/>
+      </svg>`
+    ,
+    pc_togglefit:
+      `<?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+      <svg class="dmfl-svg dmfl-svg-pm-pc-togglefit" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path class="dmfl-svg-path dmfl-svg-pm-pc-togglefit" fill-rule="evenodd" clip-rule="evenodd" d="M0 2H16V12H10V13L12 15V16H4V15L6 13V12H0V2ZM2 4H14V10H2V4Z"/>
+      </svg>`
+    ,
+    pc_zoomin:
+      `<?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+      <svg class="dmfl-svg dmfl-svg-pm-pc-zoomin" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path class="dmfl-svg-path dmfl-svg-pm-pc-zoomin" fill-rule="evenodd" clip-rule="evenodd" d="M15 1H1V15H15V1ZM7 4H9V7H12V9H9V12H7V9H4V7H7V4Z"/>
+      </svg>`
+    ,
+    pc_zoomout:
+      `<?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+      <svg class="dmfl-svg dmfl-svg-pm-pc-zoomout" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path class="dmfl-svg-path dmfl-svg-pm-pc-zoomout" fill-rule="evenodd" clip-rule="evenodd" d="M15 1H1V15H15V1ZM4 7V9L12 9V7L4 7Z"/>
+      </svg>`
+    ,
+  },
+};
+
 
 const previewControlsHTML = `
-<div class="dmfl-preview-controls-main-button">
-  <span class="dmfl-preview-controls-main-button-text">\u2699</span>
-  <div class="dmfl-preview-controls-button-strip">
-    <span class="dmfl-preview-controls-rot-cw">\u21BB</span>
-    <span class="dmfl-preview-controls-rot-ccw">\u21BA</span>
-    <span class="dmfl-preview-controls-toggle-fit">\u21F1</span>
-    <span class="dmfl-preview-controls-zoom-in">\u229E</span>
-    <span class="dmfl-preview-controls-zoom-out">\u229F</span>
-  </div>
+<span class="dmfl-preview-controls-main-button">${canSvg ? ICONS.default.pc_main : '\u2699'}</span>
+<div class="dmfl-preview-controls-rubberband">
+  <span class="dmfl-preview-controls-rot-cw">${canSvg ? ICONS.default.pc_rotcw : '\u21BB'}</span>
+  <span class="dmfl-preview-controls-rot-ccw">${canSvg ? ICONS.default.pc_rotccw : '\u21BA'}</span>
+  <span class="dmfl-preview-controls-toggle-fit">${canSvg ? ICONS.default.pc_togglefit : '\u21F1'}</span>
+  <span class="dmfl-preview-controls-zoom-in">${canSvg ? ICONS.default.pc_zoomin : '\u229E'}</span>
+  <span class="dmfl-preview-controls-zoom-out">${canSvg ? ICONS.default.pc_zoomout : '\u229F'}</span>
 </div>
 `;
+
+const previewCloseButtonHTML = `${canSvg ? ICONS.default.pm_close_but : '&times;'}`;
+const previewDlButtonHTML = `${canSvg ? ICONS.default.pm_dl_but : '\u21e3'}`;
 
 const settingsModalHTML = `
 <form class="dmfl-settings-modal-content" method="dialog">
@@ -1340,6 +1462,7 @@ class PreviewMode {
   static animationFrameId;
   static isDragging;
   static zoomFactor = 0.05;
+  static controls;
   static active;
 
   static enter(data) {
@@ -1349,24 +1472,20 @@ class PreviewMode {
 
     if (o.PREVIEW_MODE_EXIT_ON_MOUSE_EVENT) {
       bg.addEventListener(o.PREVIEW_MODE_EXIT_ON_MOUSE_EVENT, (e) => {
-        if (/^dmfl-preview-controls/.test(e.target.getAttribute('class'))) return;
+        if (/dmfl-(svg-pm-pc-|preview-controls)/.test(e.target.getAttribute('class'))) return;
         this.exit();
       });
     }
 
     if (o.PREVIEW_MODE_SHOW_CLOSE_BUTTON) {
-      const closeBut = document.createElement('span');
-      closeBut.className = 'dmfl-preview-close-button';
-      closeBut.innerHTML = '&times;'
+      const closeBut = previewCloseButton;
       closeBut.onclick = () => this.exit();
       bg.appendChild(closeBut);
     }
 
     document.body.appendChild(bg);
 
-    const dlBut = document.createElement('span');
-    dlBut.className = 'dmfl-preview-download-button';
-    dlBut.innerText = '\u21e3';
+    const dlBut = previewDlButton;
     dlBut.onclick = (e) => {
       e.preventDefault();
       dl(data.downloadURL, data.downloadFilename);
@@ -1422,8 +1541,8 @@ class PreviewMode {
       img.style.cursor = 'grabbing';
       this.isDragging = true;
       const cs = getComputedStyle(img);
-      this.img_offsetX = e.clientX - parseFloat(cs.getPropertyValue('--translateX'));
-      this.img_offsetY = e.clientY - parseFloat(cs.getPropertyValue('--translateY'));
+      this.img_offsetX = e.clientX - parseFloat(cs.getPropertyValue('--dmfl-preview-image-translateX'));
+      this.img_offsetY = e.clientY - parseFloat(cs.getPropertyValue('--dmfl-preview-image-translateY'));
     }
 
     bg.onmouseup = (e) => {
@@ -1437,8 +1556,8 @@ class PreviewMode {
     bg.onmousemove = (e) => {
       if (this.isDragging) {
         this.animationFrameId = requestAnimationFrame(() => {
-          img.style.setProperty('--translateX', `${e.clientX - this.img_offsetX}px`);
-          img.style.setProperty('--translateY', `${e.clientY - this.img_offsetY}px`);
+          img.style.setProperty('--dmfl-preview-image-translateX', `${e.clientX - this.img_offsetX}px`);
+          img.style.setProperty('--dmfl-preview-image-translateY', `${e.clientY - this.img_offsetY}px`);
           e.stopPropagation();
         });
       }
@@ -1481,8 +1600,8 @@ class PreviewMode {
     this.img.classList.remove('dmfl-fullsize');
 
     this.img.classList.add('dmfl-fit');
-    this.img.style.setProperty('--translateX', 0);
-    this.img.style.setProperty('--translateY', 0);
+    this.img.style.setProperty('--dmfl-preview-image-translateX', 0);
+    this.img.style.setProperty('--dmfl-preview-image-translateY', 0);
     this.img.dataset.dmflScale = this.getCurrentScale();
   }
 
@@ -1540,14 +1659,13 @@ class PreviewMode {
 
   static showControls() {
     if (!o.PREVIEW_MODE_SHOW_CONTROLS) return;
-    const controls = document.createElement('div');
-    controls.className = 'dmfl-preview-controls-container';
-    controls.innerHTML = previewControlsHTML;
+
+    const controls = previewControlsContainer;
     this.bg.appendChild(controls);
 
     setTimeout(() => {
       requestAnimationFrame(() => {
-        controls.style.setProperty('opacity', 1);
+        controls.style.setProperty('--dmfl-preview-controls-opacity', 0.3);
       });
     }, 100);
 
@@ -1556,13 +1674,16 @@ class PreviewMode {
     controls.querySelector('.dmfl-preview-controls-toggle-fit').onclick = () => this.toggleFit();
     controls.querySelector('.dmfl-preview-controls-zoom-in').onclick = () => this.scale(this.zoomFactor);
     controls.querySelector('.dmfl-preview-controls-zoom-out').onclick = () => this.scale(-this.zoomFactor);
+    this.controls = controls;
   }
 
   static clear() {
     document.querySelector(':root').classList.remove('dmfl-preview-mode');
+    if (this.controls) this.controls.style.setProperty('--dmfl-preview-controls-opacity', 0);
     this.bg?.remove();
     this.bg = null;
     this.img = null;
+    this.controls = null;
     this.isDragging = false;
     this.active = false;
   }
@@ -1783,7 +1904,7 @@ async function populate(data) {
   const author = data.author || info?.ownerId;
 
   let licenseInfo;
-  if (o.SHOW_LICENSE_INFO && info?.licenseInfo?.value != null) {
+  if (o.PREVIEW_MODE_SHOW_LICENSE_INFO && info?.licenseInfo?.value != null) {
     const licenseInfoValue = info.licenseInfo.value.toString();
     if (licenseInfoValue) {
       const isCompleteInfo = (info.licenseInfo.url != null) && (info.licenseInfo.text != null);
@@ -2256,6 +2377,18 @@ async function pageContentInit() {
   messageContainerBottom = document.createElement('div');
   messageContainerBottom.className = 'dmfl-message-container dmfl-message-container-bottom';
   document.body.appendChild(messageContainerBottom);
+
+  previewControlsContainer = document.createElement('div');
+  previewControlsContainer.className = 'dmfl-preview-controls-container';
+  previewControlsContainer.innerHTML = previewControlsHTML;
+
+  previewDlButton = document.createElement('span');
+  previewDlButton.className = 'dmfl-preview-download-button';
+  previewDlButton.innerHTML = previewDlButtonHTML;
+
+  previewCloseButton = document.createElement('span');
+  previewCloseButton.className = 'dmfl-preview-close-button';
+  previewCloseButton.innerHTML = previewCloseButtonHTML;
 
   document.addEventListener('keydown', handleKeydown, true);
   document.addEventListener('mousemove', handleMouse, false);
