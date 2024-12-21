@@ -18,7 +18,7 @@
 // @grant       GM_notification
 // @grant       GM.xmlHttpRequest
 // @grant       GM_registerMenuCommand
-// @version     2.1.1
+// @version     2.1.2
 // @icon        https://www.google.com/s2/favicons?sz=64&domain=flickr.com
 // @description Creates a hoverable dropdown menu that shows links to all available sizes for Flickr photos.
 // ==/UserScript==
@@ -1072,6 +1072,10 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function getRandomNumber(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 function isLightboxURL(url) {
   return url.lastIndexOf('/lightbox') > 34;
 }
@@ -1820,28 +1824,44 @@ async function xhrGetInfo(photoId, photoURL) {
   }
 }
 
-function dl(downloadURL, downloadFilename) {
+function dl(downloadURL, downloadFilename, retryCount=0) {
+  const maxRetries = 2;
   const timeoutAfter = 45000;
-  let download, msg;
-  const checkStatus = (responseObject, timeout) => {
+  let download, failMsg;
+  const checkStatus = async (responseObject, timeout) => {
     const status = responseObject.status;
     if (/^[045]/.test(status)) /* Violentmonkey */ {
       download.abort();
-      console.warn('Download failed.', {responseObject});
-      msg = `URL: ${downloadURL}\n\nDownload failed with status code: ${status}.`;
-      if (timeout) msg += ` (Timed out after ${timeout / 1000}s)`;
+      console.debug('Download failed.', {responseObject});
+      failMsg = `URL: ${downloadURL}\n\nDownload failed with status code: ${status}.`;
+      if (timeout) failMsg += ` (Timed out after ${timeout / 1000}s)`;
     }
     if (responseObject.error) /* Tampermonkey */ {
-      msg = `URL: ${downloadURL}\n\nDownload error: ${responseObject.error}`;
-      console.warn(msg);
+      failMsg = `URL: ${downloadURL}\n\nDownload error: ${responseObject.error}`;
+      console.debug(failMsg);
     }
-    if (msg) GM_notification(msg, SCRIPT_NAME);
+    if (!failMsg) return;
+    retryCount++;
+    if (maxRetries && retryCount <= maxRetries) {
+      const delay = getRandomNumber(1800, 2200);
+      const retryMsg = `Status: ${status} | Retry ${retryCount}/${maxRetries} in ${delay / 1000}s.`;
+      console.debug(retryMsg);
+      //showMessage(retryMsg, 1790, messageContainerBottom);
+      await sleep(delay);
+      dl(downloadURL, downloadFilename, retryCount);
+    } else {
+      GM_notification(failMsg, SCRIPT_NAME);
+    }
   };
+  console.debug("Downloading image:", downloadURL);
   download = GM_download({
     url: downloadURL,
     name: downloadFilename,
     timeout: timeoutAfter,
-    headers: {'Referer': window.location.origin},
+    headers: {
+      'Referer': window.location.origin,
+      'Accept': '*/*',
+    },
     onprogress: (res) => { checkStatus(res) },
     ontimeout: (res) => { checkStatus(res, timeoutAfter) },
     onerror: (res) => { checkStatus(res) },
