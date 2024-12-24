@@ -18,7 +18,7 @@
 // @grant       GM_notification
 // @grant       GM.xmlHttpRequest
 // @grant       GM_registerMenuCommand
-// @version     2.1.2
+// @version     2.1.3
 // @icon        https://www.google.com/s2/favicons?sz=64&domain=flickr.com
 // @description Creates a hoverable dropdown menu that shows links to all available sizes for Flickr photos.
 // ==/UserScript==
@@ -1042,6 +1042,7 @@ const STYLE = `
 const nodesProcessed = new Map();
 const nodesBlacklisted = new Set();
 const idsPopulating = new Set();
+const urlsDownloading = new Set();
 const messages = {};
 
 const cache = Object.create(null);
@@ -1825,6 +1826,7 @@ async function xhrGetInfo(photoId, photoURL) {
 }
 
 function dl(downloadURL, downloadFilename, retryCount=0) {
+  if (!retryCount && urlsDownloading.has(downloadURL)) return;
   const maxRetries = 2;
   const timeoutAfter = 45000;
   let download, failMsg;
@@ -1851,9 +1853,11 @@ function dl(downloadURL, downloadFilename, retryCount=0) {
       dl(downloadURL, downloadFilename, retryCount);
     } else {
       GM_notification(failMsg, SCRIPT_NAME);
+      urlsDownloading.delete(downloadURL);
     }
   };
   console.debug("Downloading image:", downloadURL);
+  urlsDownloading.add(downloadURL);
   download = GM_download({
     url: downloadURL,
     name: downloadFilename,
@@ -1865,6 +1869,10 @@ function dl(downloadURL, downloadFilename, retryCount=0) {
     onprogress: (res) => { checkStatus(res) },
     ontimeout: (res) => { checkStatus(res, timeoutAfter) },
     onerror: (res) => { checkStatus(res) },
+    onload: () => {
+      console.debug("Download complete.");
+      urlsDownloading.delete(downloadURL);
+    },
   });
 }
 
