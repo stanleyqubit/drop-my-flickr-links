@@ -18,7 +18,7 @@
 // @grant       GM_notification
 // @grant       GM.xmlHttpRequest
 // @grant       GM_registerMenuCommand
-// @version     2.1.3
+// @version     2.2
 // @icon        https://www.google.com/s2/favicons?sz=64&domain=flickr.com
 // @description Creates a hoverable dropdown menu that shows links to all available sizes for Flickr photos.
 // ==/UserScript==
@@ -259,8 +259,8 @@ const defaultSettings = {
   PREVIEW_MODE_TOGGLE_FIT_KB: {
     type: "kbd",
     value: {enabled: true, keyCode: 106, key: "*", modifierKeys: []}, // Numpad "*" key.
-    name: 'Preview mode toggle fullsize key',
-    desc: 'Toggles the preview image between full size view and fit to screen view when this key is pressed.',
+    name: 'Preview mode toggle fit to screen key',
+    desc: 'Toggles the preview image between fit to screen view and full size view when this key is pressed.',
   },
 }
 
@@ -524,37 +524,25 @@ const STYLE = `
 
   .dmfl-preview-image-container {
     position: fixed;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     top: 0;
     left: 0;
+    overflow: hidden;
   }
 
   .dmfl-preview-image {
     --dmfl-preview-image-translateX: 0;
     --dmfl-preview-image-translateY: 0;
+    --dmfl-preview-image-scale: 1;
+    --dmfl-preview-image-rotate: 0deg;
+    position: absolute;
     cursor: grab;
-    max-width: none;
-    max-height: none;
-    width: auto;
-    height: auto;
-    display: block;
-    margin: 0;
-    translate: var(--dmfl-preview-image-translateX) var(--dmfl-preview-image-translateY);
-  }
-
-  .dmfl-preview-image.dmfl-fit {
-    max-width: 100vw;
-    max-height: 100vh;
-    object-fit: scale-down;
-  }
-
-  .dmfl-preview-image.dmfl-fit.dmfl-swap-dim {
-    max-width: 100vh;
-    max-height: 100vw;
+    translate: none;
+    rotate: none;
+    scale: none;
+    transform-origin: 0 0;
+    transform: translateX(var(--dmfl-preview-image-translateX)) translateY(var(--dmfl-preview-image-translateY)) rotate(var(--dmfl-preview-image-rotate)) scale(var(--dmfl-preview-image-scale));
   }
 
   .dmfl-svg.dmfl-svg-pm-dlbut, .dmfl-preview-background svg[class*=dmfl-svg-pm-pc] {
@@ -1077,6 +1065,10 @@ function getRandomNumber(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function clamp(min, max, value) {
+  return Math.max(min, Math.min(max, value));
+}
+
 function isLightboxURL(url) {
   return url.lastIndexOf('/lightbox') > 34;
 }
@@ -1462,15 +1454,42 @@ class PreviewMode {
   static img;
   static img_w;
   static img_h;
-  static img_offsetX = 0;
-  static img_offsetY = 0;
-  static animationFrameId;
+  static img_offsetX;
+  static img_offsetY;
+  static mouseX;
+  static mouseY;
+  static canTransform;
+  static isFit;
   static isDragging;
-  static zoomFactor = 0.05;
+  static dragAnimationFrameId;
+  static SCALE_FACTOR = 1.1;
+  static SCALE_MIN = 0.01;
+  static SCALE_MAX = 5;
+  static scale;
+  static rotation;
+  static swapDimensions;
   static controls;
   static active;
 
-  static enter(data) {
+  static init(data) {
+
+    const item_w = parseInt(data.item.width);
+    const item_h = parseInt(data.item.height);
+    if (!item_w || !item_h) {
+      console.error("Image dimensions missing.", data);
+      return;
+    }
+
+    this.canTransform = false;
+    this.swapDimensions = false;
+    this.isDragging = false;
+    this.img_offsetX = 0;
+    this.img_offsetY = 0;
+    this.mouseX = window.innerWidth / 2;
+    this.mouseY = window.innerHeight / 2;
+    this.scale = 1;
+    this.rotation = 0;
+
     const bg = document.createElement('div');
     bg.className = 'dmfl-preview-background';
     this.bg = bg;
@@ -1519,153 +1538,214 @@ class PreviewMode {
     bg.appendChild(loaderContainer);
 
     const img = document.createElement('img');
-    img.setAttribute('width', data.item.width);
-    img.setAttribute('height', data.item.height);
+    img.setAttribute('width', item_w);
+    img.setAttribute('height', item_h);
     img.className = 'dmfl-preview-image';
 
     this.img = img;
-    this.img_w = data.item.width;
-    this.img_h = data.item.height;
+    this.img_w = item_w;
+    this.img_h = item_h;
 
     const imgContainer = document.createElement('div');
     imgContainer.className = 'dmfl-preview-image-container';
     bg.appendChild(imgContainer);
 
     img.onload = () => {
+      this.canTransform = (img.naturalWidth > 0);
       loaderContainer.remove();
-      img.dataset.dmflScale = this.getCurrentScale();
-      this.showControls();
+      if (o.PREVIEW_MODE_SHOW_CONTROLS) this.showControls();
+      if (o.PREVIEW_MODE_SCROLL_TO_ZOOM) {
+        img.addEventListener('wheel', (e) => {
+          if (e.deltaY == 0) return;
+          this.mouseX = e.clientX;
+          this.mouseY = e.clientY;
+          this.zoom(e.deltaY > 0 ? "out" : "in", true);
+        }, {"passive": true});
+      }
+      img.onmousedown = (e) => {
+        if (e.button != 0) return;
+        e.preventDefault();
+        e.stopPropagation();
+        img.style.cursor = 'grabbing';
+        this.isDragging = true;
+        this.img_offsetX = e.clientX - this.getX();
+        this.img_offsetY = e.clientY - this.getY();
+      }
+      bg.onmouseup = (e) => {
+        if (e.button != 0 || !this.isDragging) return;
+        e.stopPropagation();
+        this.isDragging = false;
+        img.style.cursor = 'grab';
+        cancelAnimationFrame(this.dragAnimationFrameId);
+      }
+      bg.onmousemove = (e) => {
+        if (this.isDragging) {
+          this.dragAnimationFrameId = requestAnimationFrame(() => {
+            this.setX(e.clientX - this.img_offsetX);
+            this.setY(e.clientY - this.img_offsetY);
+            this.isFit = false;
+            e.stopPropagation();
+          });
+        }
+      }
     }
 
     img.onerror = () => loaderContainer.remove();
 
-    img.onmousedown = (e) => {
-      if (e.button != 0) return;
-      e.preventDefault();
-      e.stopPropagation();
-      img.style.cursor = 'grabbing';
-      this.isDragging = true;
-      const cs = getComputedStyle(img);
-      this.img_offsetX = e.clientX - parseFloat(cs.getPropertyValue('--dmfl-preview-image-translateX'));
-      this.img_offsetY = e.clientY - parseFloat(cs.getPropertyValue('--dmfl-preview-image-translateY'));
-    }
-
-    bg.onmouseup = (e) => {
-      if (e.button != 0 || !this.isDragging) return;
-      e.stopPropagation();
-      this.isDragging = false;
-      img.style.cursor = 'grab';
-      cancelAnimationFrame(this.animationFrameId);
-    }
-
-    bg.onmousemove = (e) => {
-      if (this.isDragging) {
-        this.animationFrameId = requestAnimationFrame(() => {
-          img.style.setProperty('--dmfl-preview-image-translateX', `${e.clientX - this.img_offsetX}px`);
-          img.style.setProperty('--dmfl-preview-image-translateY', `${e.clientY - this.img_offsetY}px`);
-          e.stopPropagation();
-        });
-      }
-    }
-
-    if (o.PREVIEW_MODE_SCROLL_TO_ZOOM) {
-      img.addEventListener('wheel', (e) => {
-        if (e.deltaY == 0) return;
-        const factor = e.deltaY > 0 ? -this.zoomFactor : this.zoomFactor;
-        this.scale(factor);
-      }, {"passive": true});
-    }
-
     img.src = data.imageURL;
-    img.classList.add('dmfl-fit');
     imgContainer.appendChild(img);
 
     document.querySelector(':root').classList.add('dmfl-preview-mode');
     this.active = true;
+    this.reset();
+
   }
 
-  static getCurrentScale() {
-    return Number((this.img.getBoundingClientRect().width / this.img_w).toFixed(5));
+  static reset(toFullSize) {
+    if (!this.active) return;
+    requestAnimationFrame(() => {
+      let img_w, img_h;
+      if (this.swapDimensions) {
+        img_w = this.img_h;
+        img_h = this.img_w;
+      } else {
+        img_w = this.img_w;
+        img_h = this.img_h;
+      }
+
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const scaleX = vw / img_w;
+      const scaleY = vh / img_h;
+      const needsDownscale = (img_w > vw) || (img_h > vh);
+
+      let scale;
+      if (needsDownscale && !toFullSize) {
+        scale = Math.min(scaleX, scaleY);
+        this.isFit = true;
+      } else {
+        scale = 1;
+        this.isFit = !needsDownscale;
+      }
+
+      const scaled_w = img_w * scale;
+      const scaled_h = img_h * scale;
+
+      let x = (vw - scaled_w) / 2;
+      let y = (vh - scaled_h) / 2;
+
+      switch (this.rotation) {
+        case 90:
+        case -270:
+          x += scaled_w;
+          break;
+        case -90:
+        case 270:
+          y += scaled_h;
+          break;
+        case 180:
+        case -180:
+          x += scaled_w;
+          y += scaled_h;
+          break;
+      }
+
+      this.setX(x);
+      this.setY(y);
+      this.setScale(scale);
+    });
   }
 
-  static showZoomPercentage() {
-    showMessage(`${parseInt(this.img.dataset.dmflScale * 100)}%`, 1000, messageContainerTopleft);
-  }
-
-  static setFullsize() {
-    this.img.style.removeProperty('scale');
-    this.img.classList.remove('dmfl-fit');
-
-    this.img.classList.add('dmfl-fullsize');
-    this.img.dataset.dmflScale = 1;
-  }
-
-  static setFit() {
-    this.img.style.removeProperty('scale');
-    this.img.classList.remove('dmfl-fullsize');
-
-    this.img.classList.add('dmfl-fit');
-    this.img.style.setProperty('--dmfl-preview-image-translateX', 0);
-    this.img.style.setProperty('--dmfl-preview-image-translateY', 0);
-    this.img.dataset.dmflScale = this.getCurrentScale();
-  }
-
-  static toggleFit() {
-    const img = this.img;
-    if (!img) return;
-    if (!hasClass(img, 'dmfl-fullsize')) {
-      this.setFullsize();
-    } else {
-      this.setFit();
-    }
-    this.showZoomPercentage();
-  }
-
-  static rotate(angle) {
-    const img = this.img;
-    if (!img) return;
-    const imgContainer = img.parentNode;
-    const rotation = Number(img.dataset.dmflRotation) || 0;
-    let newAngle = rotation + angle;
-    const newAngleAbs = Math.abs(newAngle);
-    const swapDim = (newAngleAbs == 90 || newAngleAbs == 270);
-    if (newAngleAbs == 360) newAngle = 0;
-    if (swapDim) {
-      img.classList.add('dmfl-swap-dim');
-    } else {
-      img.classList.remove('dmfl-swap-dim');
-    }
-    img.style.rotate = `${newAngle}deg`;
-    img.dataset.dmflRotation = newAngle;
-  }
-
-  static scale(factor) {
-    if (this.img.dataset.dmflScale === undefined || !this.img.clientWidth || !this.img.naturalWidth) return;
-
-    const lastScale = Number(this.img.dataset.dmflScale);
-    let scale = lastScale + factor;
-
-    this.img.classList.remove('dmfl-fit');
-
-    if ((lastScale < 1 && scale > 1) || (lastScale > 1 && scale < 1)) scale = 1; // Snap to full-sized image
-    scale = parseFloat(Math.max(0.1, Math.min(scale, 5)).toFixed(5)); // Limit scale to a range
-
-    if (scale == 1) {
-      this.img.classList.add('dmfl-fullsize');
-    } else {
-      this.img.classList.remove('dmfl-fullsize');
+  static rotate(degrees) {
+    if (!this.canTransform) return;
+    let newAngle = this.rotation + degrees;
+    let newAngleAbs = Math.abs(newAngle);
+    if (newAngleAbs == 360) {
+      newAngle = 0;
+      newAngleAbs = 0;
     }
 
-    this.img.style.scale = scale;
-    this.img.dataset.dmflScale = scale;
+    const rect = this.img.getBoundingClientRect();
+    const halfW = rect.width / 2;
+    const halfH = rect.height / 2;
+    let x = rect.x + halfW;
+    let y = rect.y + halfH;
 
-    this.showZoomPercentage();
+    this.img.style.setProperty('--dmfl-preview-image-rotate', `${newAngle}deg`);
+    this.rotation = newAngle;
+    this.swapDimensions = (newAngleAbs == 90 || newAngleAbs == 270);
+
+    if (this.isFit) {
+      this.reset();
+      return;
+    }
+
+    switch (newAngle) {
+      case 0:
+        x -= halfH;
+        y -= halfW;
+        break;
+      case 90:
+      case -270:
+        x += halfH;
+        y -= halfW;
+        break;
+      case -90:
+      case 270:
+        x -= halfH;
+        y += halfW;
+        break;
+      case 180:
+      case -180:
+        x += halfH;
+        y += halfW;
+        break;
+    }
+
+    this.setX(x);
+    this.setY(y);
+  }
+
+  static zoom(direction, isWheel) {
+    if (!this.canTransform) return;
+
+    requestAnimationFrame(() => {
+      this.isFit = false;
+      let newScale = this.scale;
+      if (direction == "out") {
+        newScale /= this.SCALE_FACTOR;
+      } else {
+        newScale *= this.SCALE_FACTOR;
+      }
+
+      newScale = clamp(this.SCALE_MIN, this.SCALE_MAX, newScale);
+      const snapToFullSize = (this.scale < 1 && newScale > 1) || (this.scale > 1 && newScale < 1);
+      if (snapToFullSize) newScale = 1;
+
+      let x = this.getX();
+      let y = this.getY();
+
+      const originX = isWheel ? this.mouseX : window.innerWidth / 2;
+      const originY = isWheel ? this.mouseY : window.innerHeight / 2;
+
+      const offsetX = (originX - x) / this.scale;
+      const offsetY = (originY - y) / this.scale;
+
+      const delta = newScale - this.scale;
+
+      x -= (offsetX * delta);
+      y -= (offsetY * delta);
+
+      this.setX(x);
+      this.setY(y);
+      this.setScale(newScale);
+      this.showZoomPercentage();
+    })
   }
 
   static showControls() {
-    if (!o.PREVIEW_MODE_SHOW_CONTROLS) return;
-
     const controls = previewControlsContainer;
+    controls.style.setProperty('--dmfl-preview-controls-opacity', 0);
     this.bg.appendChild(controls);
 
     setTimeout(() => {
@@ -1677,25 +1757,51 @@ class PreviewMode {
     controls.querySelector('.dmfl-preview-controls-rot-cw').onclick = () => this.rotate(90);
     controls.querySelector('.dmfl-preview-controls-rot-ccw').onclick = () => this.rotate(-90);
     controls.querySelector('.dmfl-preview-controls-toggle-fit').onclick = () => this.toggleFit();
-    controls.querySelector('.dmfl-preview-controls-zoom-in').onclick = () => this.scale(this.zoomFactor);
-    controls.querySelector('.dmfl-preview-controls-zoom-out').onclick = () => this.scale(-this.zoomFactor);
-    this.controls = controls;
+    controls.querySelector('.dmfl-preview-controls-zoom-in').onclick = () => this.zoom("in");
+    controls.querySelector('.dmfl-preview-controls-zoom-out').onclick = () => this.zoom("out");
+  }
+
+  static showZoomPercentage() {
+    requestAnimationFrame(() => {
+      showMessage(`${parseInt(this.scale * 100)}%`, 1000, messageContainerTopleft);
+    });
+  }
+
+  static toggleFit() {
+    if (!this.canTransform) return;
+    this.reset(this.isFit);
+    this.showZoomPercentage();
+  }
+
+  static setX(value) {
+    this.img.style.setProperty('--dmfl-preview-image-translateX', `${parseFloat(value.toFixed(5))}px`);
+  }
+
+  static setY(value) {
+    this.img.style.setProperty('--dmfl-preview-image-translateY', `${parseFloat(value.toFixed(5))}px`);
+  }
+
+  static setScale(value) {
+    this.img.style.setProperty('--dmfl-preview-image-scale', parseFloat(value.toFixed(5)));
+    this.scale = value;
+  }
+
+  static getX() {
+    return parseFloat(this.img.style.getPropertyValue('--dmfl-preview-image-translateX')) || 0;
+  }
+
+  static getY() {
+    return parseFloat(this.img.style.getPropertyValue('--dmfl-preview-image-translateY')) || 0;
   }
 
   static clear() {
     document.querySelector(':root').classList.remove('dmfl-preview-mode');
-    if (this.controls) this.controls.style.setProperty('--dmfl-preview-controls-opacity', 0);
     this.bg?.remove();
-    this.bg = null;
-    this.img = null;
-    this.controls = null;
-    this.isDragging = false;
     this.active = false;
   }
 
   static exit() {
-    if (!this.active) return;
-    this.clear();
+    if (this.active) this.clear();
   }
 }
 
@@ -2021,7 +2127,7 @@ async function populate(data) {
     pmData.licenseInfo = licenseInfo;
     pmData.item = item;
     pmData.imageURL = imageURL;
-    previewButton.onclick = () => PreviewMode.enter(pmData);
+    previewButton.onclick = () => PreviewMode.init(pmData);
 
     entry.appendChild(previewButton);
     data.dropdownContent.appendChild(entry);
@@ -2204,6 +2310,7 @@ function handleKeydown(e) {
 
   e.preventDefault();
   e.stopPropagation();
+
   const setting = o.KEYBINDINGS[e.keyCode].setting;
 
   switch (setting) {
@@ -2214,10 +2321,10 @@ function handleKeydown(e) {
       PreviewMode.rotate(-90);
       break;
     case "PREVIEW_MODE_ZOOM_IN_KB":
-      PreviewMode.scale(PreviewMode.zoomFactor);
+      PreviewMode.zoom("in");
       break;
     case "PREVIEW_MODE_ZOOM_OUT_KB":
-      PreviewMode.scale(-PreviewMode.zoomFactor);
+      PreviewMode.zoom("out");
       break;
     case "PREVIEW_MODE_TOGGLE_FIT_KB":
       PreviewMode.toggleFit();
@@ -2422,6 +2529,8 @@ async function pageContentInit() {
   document.addEventListener('keydown', handleKeydown, true);
   document.addEventListener('mousemove', handleMouse, false);
   document.addEventListener('mouseenter', handleMouse, true);
+
+  window.addEventListener('resize', () => PreviewMode.reset());
 
   await appInit();
   sl.remove();
