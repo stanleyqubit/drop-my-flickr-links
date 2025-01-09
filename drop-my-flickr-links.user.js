@@ -18,7 +18,7 @@
 // @grant       GM_notification
 // @grant       GM.xmlHttpRequest
 // @grant       GM_registerMenuCommand
-// @version     2.2
+// @version     2.2.1
 // @icon        https://www.google.com/s2/favicons?sz=64&domain=flickr.com
 // @description Creates a hoverable dropdown menu that shows links to all available sizes for Flickr photos.
 // ==/UserScript==
@@ -536,6 +536,7 @@ const STYLE = `
     --dmfl-preview-image-translateY: 0;
     --dmfl-preview-image-scale: 1;
     --dmfl-preview-image-rotate: 0deg;
+    visibility: hidden;
     position: absolute;
     cursor: grab;
     translate: none;
@@ -1473,16 +1474,16 @@ class PreviewMode {
 
   static init(data) {
 
-    const item_w = parseInt(data.item.width);
-    const item_h = parseInt(data.item.height);
-    if (!item_w || !item_h) {
-      console.error("Image dimensions missing.", data);
+    if (!parseInt(data.item.width) || !parseInt(data.item.height)) {
+      console.error("Image dimensions not valid.", data);
       return;
     }
 
     this.canTransform = false;
     this.swapDimensions = false;
     this.isDragging = false;
+    this.img_w = 0;
+    this.img_h = 0;
     this.img_offsetX = 0;
     this.img_offsetY = 0;
     this.mouseX = window.innerWidth / 2;
@@ -1490,12 +1491,11 @@ class PreviewMode {
     this.scale = 1;
     this.rotation = 0;
 
-    const bg = document.createElement('div');
-    bg.className = 'dmfl-preview-background';
-    this.bg = bg;
+    this.bg = document.createElement('div');
+    this.bg.className = 'dmfl-preview-background';
 
     if (o.PREVIEW_MODE_EXIT_ON_MOUSE_EVENT) {
-      bg.addEventListener(o.PREVIEW_MODE_EXIT_ON_MOUSE_EVENT, (e) => {
+      this.bg.addEventListener(o.PREVIEW_MODE_EXIT_ON_MOUSE_EVENT, (e) => {
         if (/dmfl-(svg-pm-pc-|preview-controls)/.test(e.target.getAttribute('class'))) return;
         this.exit();
       });
@@ -1504,10 +1504,10 @@ class PreviewMode {
     if (o.PREVIEW_MODE_SHOW_CLOSE_BUTTON) {
       const closeBut = previewCloseButton;
       closeBut.onclick = () => this.exit();
-      bg.appendChild(closeBut);
+      this.bg.appendChild(closeBut);
     }
 
-    document.body.appendChild(bg);
+    document.body.appendChild(this.bg);
 
     const dlBut = previewDlButton;
     dlBut.onclick = (e) => {
@@ -1515,7 +1515,7 @@ class PreviewMode {
       dl(data.downloadURL, data.downloadFilename);
       this.exit();
     }
-    bg.appendChild(dlBut);
+    this.bg.appendChild(dlBut);
 
     if (data.licenseInfo) {
       const licenseInfoAnchor = document.createElement('a');
@@ -1527,7 +1527,7 @@ class PreviewMode {
         e.preventDefault();
         e.stopPropagation();
       }
-      bg.appendChild(licenseInfoAnchor);
+      this.bg.appendChild(licenseInfoAnchor);
     }
 
     const loaderContainer = document.createElement('div');
@@ -1535,74 +1535,72 @@ class PreviewMode {
     const loader = document.createElement('div');
     loader.className = "dmfl-loader";
     loaderContainer.appendChild(loader);
-    bg.appendChild(loaderContainer);
-
-    const img = document.createElement('img');
-    img.setAttribute('width', item_w);
-    img.setAttribute('height', item_h);
-    img.className = 'dmfl-preview-image';
-
-    this.img = img;
-    this.img_w = item_w;
-    this.img_h = item_h;
+    this.bg.appendChild(loaderContainer);
 
     const imgContainer = document.createElement('div');
     imgContainer.className = 'dmfl-preview-image-container';
-    bg.appendChild(imgContainer);
+    this.bg.appendChild(imgContainer);
 
-    img.onload = () => {
-      this.canTransform = (img.naturalWidth > 0);
+    this.img = new Image();
+    this.img.className = 'dmfl-preview-image';
+
+    this.img.onload = () => {
+      this.img_w = this.img.naturalWidth;
+      this.img_h = this.img.naturalHeight;
+      this.img.setAttribute('width', this.img_w);
+      this.img.setAttribute('height', this.img_h);
+      this.canTransform = (this.img_w > 0);
+      this.reset();
+      this.img.style.setProperty('visibility', 'visible');
       loaderContainer.remove();
       if (o.PREVIEW_MODE_SHOW_CONTROLS) this.showControls();
       if (o.PREVIEW_MODE_SCROLL_TO_ZOOM) {
-        img.addEventListener('wheel', (e) => {
+        this.img.addEventListener('wheel', (e) => {
           if (e.deltaY == 0) return;
           this.mouseX = e.clientX;
           this.mouseY = e.clientY;
           this.zoom(e.deltaY > 0 ? "out" : "in", true);
         }, {"passive": true});
       }
-      img.onmousedown = (e) => {
+      this.img.onmousedown = (e) => {
         if (e.button != 0) return;
         e.preventDefault();
         e.stopPropagation();
-        img.style.cursor = 'grabbing';
+        this.img.style.cursor = 'grabbing';
         this.isDragging = true;
         this.img_offsetX = e.clientX - this.getX();
         this.img_offsetY = e.clientY - this.getY();
       }
-      bg.onmouseup = (e) => {
+      this.bg.onmouseup = (e) => {
         if (e.button != 0 || !this.isDragging) return;
         e.stopPropagation();
         this.isDragging = false;
-        img.style.cursor = 'grab';
+        this.img.style.cursor = 'grab';
         cancelAnimationFrame(this.dragAnimationFrameId);
       }
-      bg.onmousemove = (e) => {
-        if (this.isDragging) {
-          this.dragAnimationFrameId = requestAnimationFrame(() => {
-            this.setX(e.clientX - this.img_offsetX);
-            this.setY(e.clientY - this.img_offsetY);
-            this.isFit = false;
-            e.stopPropagation();
-          });
-        }
+      this.bg.onmousemove = (e) => {
+        if (!this.isDragging) return;
+        this.dragAnimationFrameId = requestAnimationFrame(() => {
+          this.setX(e.clientX - this.img_offsetX);
+          this.setY(e.clientY - this.img_offsetY);
+          this.isFit = false;
+          e.stopPropagation();
+        });
       }
     }
 
-    img.onerror = () => loaderContainer.remove();
+    this.img.onerror = () => loaderContainer.remove();
 
-    img.src = data.imageURL;
-    imgContainer.appendChild(img);
+    this.img.src = data.imageURL;
+    imgContainer.appendChild(this.img);
 
     document.querySelector(':root').classList.add('dmfl-preview-mode');
     this.active = true;
-    this.reset();
 
   }
 
   static reset(toFullSize) {
-    if (!this.active) return;
+    if (!this.active || !this.canTransform) return;
     requestAnimationFrame(() => {
       let img_w, img_h;
       if (this.swapDimensions) {
