@@ -15,13 +15,22 @@ Tested and compatible with:
 - Firefox + Tampermonkey w/ Content Script API option set to "UserScripts API Dynamic"
 - Opera + Tampermonkey
 
-Thumbnails view:
+<video src="https://github.com/user-attachments/assets/897120e3-eaeb-48b9-ab65-2c0ff41df402" width="600" height="620" controls></video>
 
-![demo-gif1](https://github.com/stanleyqubit/drop-my-flickr-links/assets/109595703/2385b4b4-2fb5-4908-bf8a-af995387c9f3)
+### Default keybindings:
 
-Main photo page view:
-
-![demo-gif2](https://github.com/stanleyqubit/drop-my-flickr-links/assets/109595703/4e44eacd-2bed-44bf-9ece-4948cbabc479)
+| Key         | Action                     |
+| :---------- | -------------------------: |
+| q           | Dropdown navigate "up"     |
+| w           | Dropdown navigate "down"   |
+| s           | Save image                 |
+| e           | Preview mode enter         |
+| Escape      | Preview mode exit          |
+| >           | Image rotate clockwise     |
+| <           | Image rotate c-clockwise   |
+| +           | Image zoom in              |
+| -           | Image zoom out             |
+| *           | Image fit to screen toggle |
 
 ## Install
 
