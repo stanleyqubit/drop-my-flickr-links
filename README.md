@@ -3,6 +3,7 @@
 - Hover your mouse over the dropdown button to display links to all sizes variants for any Flickr photo.
 - Left-click on a link to download the photo.
 - Left-click on the "&#8862;" to enter preview mode.
+- Enable "Preview mode auto-enter" and you can preview images just by hovering them with the mouse cursor.
 - Widget to rotate, zoom in/out, toggle between fit to screen view and full-size view.
 - Choose your color palette.
 - Customizable keybindings in the settings.
