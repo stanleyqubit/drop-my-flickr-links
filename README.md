@@ -20,18 +20,18 @@ Tested and compatible with:
 
 ### Default keybindings:
 
-| Key         | Action                     |
-| :---------- | -------------------------: |
-| q           | Dropdown navigate "up"     |
-| w           | Dropdown navigate "down"   |
-| s           | Save image                 |
-| e           | Preview mode enter         |
-| Escape      | Preview mode exit          |
-| >           | Image rotate clockwise     |
-| <           | Image rotate c-clockwise   |
-| +           | Image zoom in              |
-| -           | Image zoom out             |
-| *           | Image fit to screen toggle |
+| Key               | Action                     |
+| :---------------- | -------------------------: |
+| <kbd>q</kbd>      | Dropdown navigate "up"     |
+| <kbd>w</kbd>      | Dropdown navigate "down"   |
+| <kbd>s</kbd>      | Save image                 |
+| <kbd>e</kbd>      | Preview mode enter         |
+| <kbd>Escape</kbd> | Preview mode exit          |
+| <kbd>></kbd>      | Image rotate clockwise     |
+| <kbd><</kbd>      | Image rotate c-clockwise   |
+| <kbd>+</kbd>      | Image zoom in              |
+| <kbd>-</kbd>      | Image zoom out             |
+| <kbd>*</kbd>      | Image fit to screen toggle |
 
 ## Install
 
