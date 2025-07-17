@@ -19,27 +19,29 @@
 // @grant       GM_notification
 // @grant       GM_xmlhttpRequest
 // @grant       GM_registerMenuCommand
-// @version     3.0
+// @version     3.0.1
 // @icon        https://www.google.com/s2/favicons?sz=64&domain=flickr.com
 // @description Creates a hoverable dropdown menu that shows links to all available sizes for Flickr photos.
 // ==/UserScript==
 
 
-/* The photos available for download through this userscript may be protected by
- * copyright laws. Downloading a photo constitutes your agreement to use the
- * photo in accordance with the license associated with it. Please check the
- * individual photo's license information before use.
- *
- * Note -- Firefox + Tampermonkey users: in order for the script to have full
- * access to the Flickr YUI `appContext` global variable and thus avoid having
- * to resort to workarounds which may result in incorrectly displayed links or
- * incomplete photo data, go to the Tampermonkey dashboard -> Settings, under
- * "Config mode" select "Advanced", then under "Content Script API" select
- * "UserScripts API Dynamic", then click "Save".
- *
- * FYI -- some authors may choose to disable photo downloads which means that
- * Flickr will not make certain photo sizes (e.g. originals) available for users
- * that aren't signed in with a Flickr account. */
+/*
+  The photos available for download through this userscript may be protected by
+  copyright laws. Downloading a photo constitutes your agreement to use the
+  photo in accordance with the license associated with it. Please check the
+  individual photo's license information before use.
+
+  Note -- Firefox + Tampermonkey users: in order for the script to have full
+  access to the Flickr YUI `appContext` global variable and thus avoid having to
+  resort to workarounds which may result in incorrectly displayed links or
+  incomplete photo data, go to the Tampermonkey dashboard -> Settings, under
+  "Config mode" select "Advanced", then under "Content Script API" select
+  "UserScripts API Dynamic", then click "Save".
+
+  FYI -- some authors may choose to disable photo downloads which means that
+  Flickr will not make certain photo sizes (e.g. originals) available for users
+  that aren't signed in with a Flickr account.
+*/
 
 
 const SCRIPT_NAME = "Drop My Flickr Links!";
@@ -96,7 +98,7 @@ const mouseInside = (e, rect) =>
    && e.clientY <= rect.bottom);
 
 const isValidImageURL = (url) =>
-  /(?<!combo\.)static\.?flickr\.com\/[a-z0-9_\/]+\.(jpg|png|gif)$/.test(url);
+  /(?<!combo\.)(static\.?|staging-jubilee\.)flickr\.com\/[a-z0-9_\/]+\.(jpg|png|gif)$/.test(url);
 
 const isValidHref = (href) =>
   /flickr\.com\/(photos(?!\/tags\/)\/[-\w@]+\/[0-9]+|gp\/[-\w@]+\/[\w]+)(?!.*\/sizes\/)/.test(href);
@@ -523,37 +525,37 @@ const Settings = {
 const LICENSE_INFO = [
   {
     value: '0',
-    text: 'All rights reserved',
-    url: 'https://flickrhelp.com/hc/en-us/articles/4404078674324-Change-Your-Photo-s-License-in-Flickr'
+    text: 'All Rights Reserved',
+    url: 'https://www.flickrhelp.com/hc/en-us/articles/10710266545556-Using-Flickr-images-shared-by-other-members'
   },
   {
     value: '1',
-    text: 'Attribution-NonCommercial-ShareAlike',
+    text: 'CC BY-NC-SA 2.0',
     url: 'https://creativecommons.org/licenses/by-nc-sa/2.0/'
   },
   {
     value: '2',
-    text: 'Attribution-NonCommercial',
+    text: 'CC BY-NC 2.0',
     url: 'https://creativecommons.org/licenses/by-nc/2.0/'
   },
   {
     value: '3',
-    text: 'Attribution-NonCommercial-NoDerivs',
+    text: 'CC BY-NC-ND 2.0',
     url: 'https://creativecommons.org/licenses/by-nc-nd/2.0/'
   },
   {
     value: '4',
-    text: 'Attribution',
+    text: 'CC BY 2.0',
     url: 'https://creativecommons.org/licenses/by/2.0/'
   },
   {
     value: '5',
-    text: 'Attribution-ShareAlike',
+    text: 'CC BY-SA 2.0',
     url: 'https://creativecommons.org/licenses/by-sa/2.0/'
   },
   {
     value: '6',
-    text: 'Attribution-NoDerivs',
+    text: 'CC BY-ND 2.0',
     url: 'https://creativecommons.org/licenses/by-nd/2.0/'
   },
   {
@@ -563,8 +565,8 @@ const LICENSE_INFO = [
   },
   {
     value: '8',
-    text: 'United States government work',
-    url: 'http://www.usa.gov/copyright.shtml'
+    text: 'United States Government Work',
+    url: 'https://www.usa.gov/government-copyright'
   },
   {
     value: '9',
@@ -573,18 +575,49 @@ const LICENSE_INFO = [
   },
   {
     value: '10',
-    text: 'Public Domain Work',
+    text: 'Public Domain Mark',
     url: 'https://creativecommons.org/publicdomain/mark/1.0/'
+  },
+  {
+    value: '11',
+    text: 'CC BY 4.0',
+    url: 'https://creativecommons.org/licenses/by/4.0/'
+  },
+  {
+    value: '12',
+    text: 'CC BY-SA 4.0',
+    url: 'https://creativecommons.org/licenses/by-sa/4.0/'
+  },
+  {
+    value: '13',
+    text: 'CC BY-ND 4.0',
+    url: 'https://creativecommons.org/licenses/by-nd/4.0/'
+  },
+  {
+    value: '14',
+    text: 'CC BY-NC 4.0',
+    url: 'https://creativecommons.org/licenses/by-nc/4.0/'
+  },
+  {
+    value: '15',
+    text: 'CC BY-NC-SA 4.0',
+    url: 'https://creativecommons.org/licenses/by-nc-sa/4.0/'
+  },
+  {
+    value: '16',
+    text: 'CC BY-NC-ND 4.0',
+    url: 'https://creativecommons.org/licenses/by-nc-nd/4.0/'
   }
 ];
 
 const ICONS = {
   "default": {
-  /*
+  /**
    * https://www.svgrepo.com/collection/chunk-16px-thick-interface-icons/
    * Author: Noah Jacobus
    * Website: https://noahjacob.us/
-   * License: PD */
+   * License: PD
+   */
     loader:
       `<?xml version="1.0" encoding="utf-8"?>
       <svg class="dmfl-svg dmfl-svg-loader" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"  width="100%" height="100%">
@@ -653,7 +686,7 @@ const ICONS = {
   },
 };
 
-const SIZES_ORDER = [
+const DS_KEYS = [
   "o", "8k", "7k", "6k", "5k", "4k", "3k", "k", "h",
   "l", "c", "z", "m", "w", "n", "s", "q", "t", "sq"
 ];
@@ -1530,20 +1563,18 @@ const SettingsModal = {
     }
     this.content.onanimationend = (e) => {
       if (e.target.classList.contains('opening')) {
-        console.log('opened');
         e.target.classList.remove('opening');
         Dropdown.active = this.dropdown;
         this.dropdown.show();
-        window.addEventListener('resize', this.onResize);
+        addEventListener('resize', this.onResize);
       } else if (e.target.classList.contains('closing')) {
-        console.log('closed');
         e.target.classList.remove('closing');
         this.clearEntries();
         this.shown = false;
         setStyle(Object.assign(o, this.currentOpts));
         Dropdown.active = this.lastActiveDropdown?.container.isConnected
           ? this.lastActiveDropdown : null;
-        window.removeEventListener('resize', this.onResize);
+        removeEventListener('resize', this.onResize);
         MouseHandler.init();
       }
     }
@@ -1650,7 +1681,7 @@ const SettingsModal = {
           this.onValueChanged(settingName, inputElem[propertyToGet]);
         });
         entryChildren.push(inputElem);
-        if (settingName.indexOf('_COLOR') >= 0) {
+        if (settingName.includes('_COLOR')) {
           const colorPicker = $new('input', 'dmfl-sm-color-picker');
           colorPicker.setAttribute('type', 'color');
           colorPicker.value = inputElem.value;
@@ -1836,7 +1867,7 @@ const PreviewMode = {
     this.mouseY = innerHeight / 2;
     this.scale = 1;
     this.rotation = 0;
-    window.addEventListener('resize', this.onResize);
+    addEventListener('resize', this.onResize);
 
     this.bg = $new('div', 'dmfl-pv-bg');
     $(':root').classList.add('dmfl-pv-open');
@@ -2183,7 +2214,7 @@ const PreviewMode = {
     this.container.innerHTML = '';
     this.photoInfoWrapper.innerHTML = '';
 
-    window.removeEventListener('resize', this.onResize);
+    removeEventListener('resize', this.onResize);
     this.canTransform = false;
     this.active = false;
     MouseHandler.init();
@@ -2210,8 +2241,9 @@ class Dropdown {
       dropdownNodes.forEach(n => {
         n.classList.add('dmfl-engagement-view-main-photo-page');
       });
-      const flickrDlButton = target.node.getElementsByClassName('download')[0];
-      if (o.REPLACE_FLICKR_DL_BUTTON && flickrDlButton) {
+      let flickrDlButton;
+      if (o.REPLACE_FLICKR_DL_BUTTON
+          && (flickrDlButton = target.node.getElementsByClassName('download')[0])) {
         target.node.replaceChild(this.container, flickrDlButton);
       } else {
         target.node.appendChild(this.container);
@@ -2261,20 +2293,20 @@ class Dropdown {
     return $$('a', this.content).length;
   }
   navStart(direction) {
-    const arrayLength = this.target.sizes?.length;
-    if (!arrayLength) return;
+    const numSizes = this.target.sizes?.length;
+    if (!numSizes) return;
     this.container.classList.add('dmfl-dd-select-mode');
     this.container.dispatchEvent(new MouseEvent('mouseenter'));
     switch(direction) {
       case "up":
         this.selectedIndex = this.selectedIndex == null
-          ? arrayLength - 1
-          : (this.selectedIndex - 1 + arrayLength) % arrayLength;
+          ? numSizes - 1
+          : (this.selectedIndex - 1 + numSizes) % numSizes;
         break;
       case "down":
         this.selectedIndex = this.selectedIndex == null
           ? 0
-          : (this.selectedIndex + 1) % arrayLength;
+          : (this.selectedIndex + 1) % numSizes;
         break;
       default:
         return;
@@ -2475,13 +2507,13 @@ async function populate(dropdown) {
       || idsPopulating.has(dropdown.target.photoId)
       || nodesBlacklisted.has(dropdown.target.node))
     return;
-  const linkCount = dropdown.linkCount;
+  const numLinks = dropdown.linkCount;
   const lastStatus = cache[dropdown.target.photoId]?.responseStatus;
-  if (linkCount < 2 && /^(5|429|403)/.test(lastStatus)) {
+  if (numLinks < 2 && /^(5|429|403)/.test(lastStatus)) {
     console.debug(`${dropdown.target.photoId} : Last server response was ${lastStatus}. Retrying.`);
     dropdown.content.innerHTML = '';
     delete cache[dropdown.target.photoId];
-  } else if (linkCount > 0) {
+  } else if (numLinks) {
     return;
   }
 
@@ -2503,17 +2535,18 @@ async function populate(dropdown) {
     dropdown.populateFailed = false;
   }
 
-  /* First try to get sizes info from the YUI `appContext` global variable.
+  /**
+   * First try to get sizes info from the YUI `appContext` global variable.
    * Some of this object's methods might not be available as the UserScripts API
-   * implementation may differ across userscript managers. For Chromium-based web
-   * browsers this shouldn't be an issue. However, if the YUI module is not
-   * available, a xhr will be sent as a fallback.
+   * implementation may differ across userscript managers. For Chromium-based
+   * web browsers this shouldn't be an issue. However, if the YUI module is not
+   * available, a request for the main photo page will be sent as a fallback
+   * and its HTML probed for info via RegEx matching.
    *
-   * Also, see note at the top of the file. */
+   * Also, see note at the top of the file.
+   */
 
-  const author = dropdown.target.author;
-  const photoId = dropdown.target.photoId;
-  const photoPageURL = dropdown.target.photoPageURL;
+  const {author, photoId, photoPageURL} = dropdown.target;
 
   let info = cache[photoId];
   if (info) {
@@ -2526,7 +2559,7 @@ async function populate(dropdown) {
       const reg = res?.registry?._data?.[photoId];
       const ds = res?.getValue?.('descendingSizes') || Object.entries(reg.sizes)
           .map(([key, value]) => { return { ...value, key } })
-          .sort((a, b) => SIZES_ORDER.indexOf(a.key) - SIZES_ORDER.indexOf(b.key));
+          .sort((a, b) => DS_KEYS.indexOf(a.key) - DS_KEYS.indexOf(b.key));
       if (!ds?.length) throw 'YUI app has no sizes data.';
       info.descendingSizes = ds;
       page.YUIready = true;
@@ -2876,8 +2909,8 @@ function checkBody() {
 
     if (!getOr(data.photoPageURL)) return;
 
-    const photoIsLocked = (data.photoPageURL.indexOf('flickr.com/gp/') >= 0);
-    const photoIsUnlocked = (data.photoPageURL.indexOf('flickr.com/photos/') >= 0);
+    const photoIsLocked = data.photoPageURL.includes('flickr.com/gp/');
+    const photoIsUnlocked = data.photoPageURL.includes('flickr.com/photos/');
     if (!photoIsLocked && !photoIsUnlocked) return;
 
     if (/\/(albums|groups|galleries)\//.test(data.photoPageURL)) {
@@ -2909,8 +2942,12 @@ function checkBody() {
     console.debug(`Created dropdown for nodeName ${node.nodeName} | ` +
                   `class ${node.className} | nodesProcessed: ${nodesProcessed.size}`);
 
-    /* Populate immediately only if the `appContext` global variable is ready.
-     * Don't want to flood the server with too many requests during observer stage. */
+    /**
+     * Populate immediately only if the `appContext` global variable is ready.
+     * Don't want to flood the server with too many non-API requests in a row
+     * during observer stage. Calling appContext.getModel(...) will only send
+     * requests to the Flickr API via the REST endpoint to gather info.
+     */
     if (page.YUIready || !data.isThumbnail) {
       setTimeout(() => { /* Don't want to keep the observer busy for _too_ long */
         populate(dropdown);
@@ -2929,12 +2966,11 @@ function checkBody() {
 (async () => {
   console.log("Init start.");
   const getPageContent = () => document.querySelectorAll?.('div#content, div#Main, div#main, main')[0];
-  let pageContent = getPageContent();
-  if (!pageContent) {
+  if (!(page.content = getPageContent())) {
     console.log('Waiting for page content.');
     await new Promise(resolve => {
       new MutationObserver((_, observer) => {
-        if (pageContent = getPageContent()) {
+        if (page.content = getPageContent()) {
           console.log('Page content ready.');
           observer.disconnect();
           resolve();
@@ -2949,11 +2985,10 @@ function checkBody() {
   SettingsModal.init();
   GM_registerMenuCommand('Settings', SettingsModal.show.bind(SettingsModal));
 
-  document.body.appendChild(startupLoader);
-  document.body.appendChild(overlay);
+  document.body.append(startupLoader, overlay);
 
   new MutationObserver(checkBody)
-    .observe(pageContent, { childList: true, subtree: true });
+    .observe(page.content, { childList: true, subtree: true });
 
   new ResizeObserver(() => { Dropdown.active?.updatePos() })
     .observe(document.documentElement);
@@ -2961,7 +2996,7 @@ function checkBody() {
   document.addEventListener('keydown', onKeyDown, true);
   MouseHandler.init();
 
-  if (pageContent.getAttribute('id') === 'content' && typeof unsafeWindow !== 'undefined') {
+  if (page.content.getAttribute('id') === 'content' && typeof unsafeWindow !== 'undefined') {
     let retryCount = 0;
     while (!(page.YUIready = unsafeWindow.appContext?.getModel != null) && retryCount < 10) {
       retryCount++;
