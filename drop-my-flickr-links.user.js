@@ -59,6 +59,9 @@ const $new = (tagName, className='', innerHTML='') => {
   return elem;
 }
 
+const isObject = (val) =>
+  Object.prototype.toString.call(val) === '[object Object]';
+
 const sleep = (ms) =>
   new Promise(resolve => setTimeout(resolve, ms));
 
@@ -486,9 +489,9 @@ const Settings = {
       ? settingsObj[settingName]
       : defaultValue;
 
-    // Starting with version 3, none of the setting values are objects. In order
-    // to preserve the existing stored settings, try to salvage saved values
-    // from the previous settings object which had a different structure.
+    // Starting with version 3, all setting values are primitive data types.
+    // In order to preserve the existing stored settings, try to salvage saved
+    // values from the previous settings object which had a different structure.
     if (typeof value === 'object') {
       value = value.value;
       if (typeof value === 'object') {
@@ -2407,7 +2410,7 @@ function dl(opts) {
     if (download.aborted)
       return Promise.reject("Download aborted from the outside");
 
-    const resIsObj = res != null && typeof res === 'object';
+    const resIsObj = isObject(res);
 
     const downloadFailed = (/error|timeout/.test(evt))
       || (!resIsObj)
