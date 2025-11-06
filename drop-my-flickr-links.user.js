@@ -759,9 +759,13 @@ function setStyle(o) {
 
   .dmfl-dd-container.dmfl-thumbnail {
     position: absolute;
+    box-sizing: content-box;
+    padding: 3px;
+  }
+
+  .dmfl-dd-container.dmfl-thumbnail:hover {
     width: max-content;
     height: max-content;
-    padding: 3px;
   }
 
   .dmfl-dd-container[class*="dmfl-engagement-view"] {
@@ -776,7 +780,7 @@ function setStyle(o) {
 
   .dmfl-dd-container:hover .dmfl-dd-content,
   .dmfl-dd-container.dmfl-dd-select-mode .dmfl-dd-content {
-    display: block;
+    visibility: visible;
   }
 
   .dmfl-dd-container:hover .dmfl-dd-button.dmfl-populated,
@@ -824,7 +828,7 @@ function setStyle(o) {
   }
 
   .dmfl-dd-content {
-    display: none;
+    visibility: hidden;
     width: max-content;
     height: max-content;
     background-color: #f1f1f1;
@@ -2333,13 +2337,23 @@ class Dropdown {
   }
   hide() {
     this.navStop();
-    overlay.innerHTML = '';
-    overlay.style.display = 'none';
-    this.resizeObserver.disconnect();
+    if (!this.isStatic) {
+      this.content.style.left = 0;
+      overlay.innerHTML = '';
+      overlay.style.display = 'none';
+      this.resizeObserver.disconnect();
+    }
     if (!this.container.isConnected) {
       page.scrollX = null;
       page.scrollY = null;
       this.constructor.active = null;
+    }
+  }
+  updateContentPos() {
+    const r = this.content.getBoundingClientRect();
+    const cw = document.documentElement.clientWidth;
+    if (r.right > cw) {
+      this.content.style.left = `${-(r.right - cw)}px`;
     }
   }
   updatePos() {
@@ -2806,6 +2820,7 @@ const MouseHandler = {
 
     if (!dropdownShown && targetHovered) {
       await dropdown.show();
+      if (dropdown.target.isThumbnail) dropdown.updateContentPos();
       if (o.PREVIEW_MODE_AUTOENTER && dropdown.target.sizes?.[0]) {
         MouseHandler.hoverTimeoutId = setTimeout(() => {
           if (!PreviewMode.active && (Dropdown.active?.target.node == dropdown.target.node))
