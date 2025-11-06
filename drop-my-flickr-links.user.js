@@ -529,86 +529,114 @@ const LICENSE_INFO = [
   {
     value: '0',
     text: 'All Rights Reserved',
+    //desc: "You must request permission from the creator to use this work.",
+    desc: 'The content owner retains all rights provided by copyright law. As such, you cannot reproduce, distribute and/or adapt any part of the work without permission.',
     url: 'https://www.flickrhelp.com/hc/en-us/articles/10710266545556-Using-Flickr-images-shared-by-other-members'
   },
   {
     value: '1',
     text: 'CC BY-NC-SA 2.0',
+    //desc: "You can use this work, but only in a non-commercial way, so long as credit is given to the creator. You must then allow your work to be used under the same terms.",
+    desc: 'You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may not use the material for commercial purposes. If you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.',
     url: 'https://creativecommons.org/licenses/by-nc-sa/2.0/'
   },
   {
     value: '2',
     text: 'CC BY-NC 2.0',
+    //desc: "You can use this work, but only in a non-commercial way, so long as credit is given to the creator.",
+    desc: 'You must give appropriate credit, provide a link to the license and indicate if changes were made. You may not use the material for commercial purposes.',
     url: 'https://creativecommons.org/licenses/by-nc/2.0/'
   },
   {
     value: '3',
     text: 'CC BY-NC-ND 2.0',
+    //desc: "You can use this work, in its original form without any modifications and only in a non-commercial way, so long as credit is given to the creator.",
+    desc: 'You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may not use the material for commercial purposes. If you remix, transform, or build upon the material, you may not distribute the modified material.',
     url: 'https://creativecommons.org/licenses/by-nc-nd/2.0/'
   },
   {
     value: '4',
     text: 'CC BY 2.0',
+    //desc: "You can use this work so long as credit is given to the creator.",
+    desc: 'You must give appropriate credit, provide a link to the license, and indicate if changes were made.',
     url: 'https://creativecommons.org/licenses/by/2.0/'
   },
   {
     value: '5',
     text: 'CC BY-SA 2.0',
+    //desc: "You can use this work so long as credit is given to the creator. You must then allow your work to be used under the same terms.",
+    desc: 'You must give appropriate credit, provide a link to the license, and indicate if changes were made. If you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.',
     url: 'https://creativecommons.org/licenses/by-sa/2.0/'
   },
   {
     value: '6',
     text: 'CC BY-ND 2.0',
+    //desc: "You can use this work, in its original form without any modifications, so long as credit is given to the creator.",
+    desc: 'You must give appropriate credit, provide a link to the license, and indicate if changes were made. If you remix, transform, or build upon the material, you may not distribute the modified material.',
     url: 'https://creativecommons.org/licenses/by-nd/2.0/'
   },
   {
     value: '7',
     text: 'No known copyright restrictions',
+    //desc: "The individual or organization posting the work is unaware of any restrictions. You should review the work prior to proceeding with use.",
+    desc: 'This content is shared as part of the Flickr Commons, and has been determined to be free of copyright restrictions.',
     url: '/commons/usage/'
   },
   {
     value: '8',
     text: 'United States Government Work',
+    //desc: "Copyright protection is not available for any work of the United States Government.",
+    desc: 'Most U.S. government creative works such as writing or images are copyright-free. But not everything is. So before you use a U.S. government work, learn more (click).',
     url: 'https://www.usa.gov/government-copyright'
   },
   {
     value: '9',
     text: 'Public Domain Dedication (CC0)',
+    //desc: "You can use this work since the copyright is no longer enforced.",
+    desc: 'This work has been placed as completely as possible in the public domain. You may freely build upon, enhance and reuse the works for any purposes without restriction.',
     url: 'https://creativecommons.org/publicdomain/zero/1.0/'
   },
   {
     value: '10',
     text: 'Public Domain Mark',
+    //desc: "You can use this work since the copyright has expired.",
+    desc: 'This work is no longer restricted by copyright and can be freely used.',
     url: 'https://creativecommons.org/publicdomain/mark/1.0/'
   },
   {
     value: '11',
     text: 'CC BY 4.0',
+    desc: 'You must give appropriate credit, provide a link to the license, and indicate if changes were made.',
     url: 'https://creativecommons.org/licenses/by/4.0/'
   },
   {
     value: '12',
     text: 'CC BY-SA 4.0',
+    desc: 'You must give appropriate credit, provide a link to the license, and indicate if changes were made. If you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.',
     url: 'https://creativecommons.org/licenses/by-sa/4.0/'
   },
   {
     value: '13',
     text: 'CC BY-ND 4.0',
+    desc: 'You must give appropriate credit, provide a link to the license, and indicate if changes were made. If you remix, transform, or build upon the material, you may not distribute the modified material.',
     url: 'https://creativecommons.org/licenses/by-nd/4.0/'
   },
   {
     value: '14',
     text: 'CC BY-NC 4.0',
+    desc: 'You must give appropriate credit, provide a link to the license and indicate if changes were made. You may not use the material for commercial purposes.',
     url: 'https://creativecommons.org/licenses/by-nc/4.0/'
   },
   {
     value: '15',
     text: 'CC BY-NC-SA 4.0',
+    desc: 'You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may not use the material for commercial purposes. If you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.',
     url: 'https://creativecommons.org/licenses/by-nc-sa/4.0/'
   },
   {
     value: '16',
     text: 'CC BY-NC-ND 4.0',
+    desc: 'You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may not use the material for commercial purposes. If you remix, transform, or build upon the material, you may not distribute the modified material.',
     url: 'https://creativecommons.org/licenses/by-nc-nd/4.0/'
   }
 ];
@@ -1903,7 +1931,8 @@ const PreviewMode = {
     if (o.PREVIEW_MODE_SHOW_LICENSE_INFO && data.licenseInfo) {
       const el = $new('a', 'dmfl-pv-license-info');
       el.setAttribute('href', data.licenseInfo.url);
-      el.innerText = `License: ${data.licenseInfo.text}`;
+      el.setAttribute('title', data.licenseInfo.desc);
+      el.text = `License: ${data.licenseInfo.text}`;
       el.onclick = (e) => {
         GM_openInTab(el.href, false);
         e.preventDefault();
