@@ -75,13 +75,10 @@ const sequence = (min, max, step) =>
   [...Array(Math.floor((max - min) / step) + 1).keys()].map(i => i * step + min);
 
 const getOr = (...args) => {
-  while(args.length) {
+  while (args.length) {
     const v = args.shift();
-    if (v != null) {
-      if (typeof v === 'string' && !v.length)
-        continue;
+    if (v != null && v !== '')
       return v;
-    };
   }
 }
 
@@ -1167,7 +1164,7 @@ function setStyle(o) {
   .dmfl-pv-photo-info-wrapper {
     display: flex;
     color: #fff !important;
-    font-size: smaller;
+    font-size: 13.5px;
     position: fixed;
     z-index: 30001;
     left: 20px;
@@ -1657,7 +1654,7 @@ const SettingsModal = {
   onValueChanged(key, value) {
     this.saveButton.disabled = false;
     this.restoreButton.disabled = false;
-    console.debug(`${key} value changed:`, value);
+    console.debug(`${key} value changed:`, {value});
     this.tempSettings[key] = value;
     Object.assign(o, Settings.getOpts(this.tempSettings));
     if (Settings.defaults[key]?.section == 'appearance') {
@@ -1796,7 +1793,7 @@ const SettingsModal = {
           opt.value = v;
           opt.textContent = isOptionsArray ? v : k;
           selectElem.appendChild(opt);
-          if (v == dataVal) { valueDesc = isOptionsArray ? v : k };
+          if (v == dataVal) { valueDesc = isOptionsArray ? v : k }
         }
         selectElem.value = settingValue;
         selectElem.addEventListener('change', ({target: {value: v}}) => {
@@ -1862,8 +1859,8 @@ const PreviewMode = {
     $('.dmfl-pv-controls-rot-cw', this.controls).onclick = () => this.rotate(90);
     $('.dmfl-pv-controls-rot-ccw', this.controls).onclick = () => this.rotate(-90);
     $('.dmfl-pv-controls-toggle-fit', this.controls).onclick = () => this.toggleFit();
-    $('.dmfl-pv-controls-zoom-in', this.controls).onclick = () => this.zoom("in");
-    $('.dmfl-pv-controls-zoom-out', this.controls).onclick = () => this.zoom("out");
+    $('.dmfl-pv-controls-zoom-in', this.controls).onclick = () => this.zoom(1);
+    $('.dmfl-pv-controls-zoom-out', this.controls).onclick = () => this.zoom(-1);
     this.onResize = () => this.reset();
   },
 
@@ -1986,7 +1983,7 @@ const PreviewMode = {
           if (e.deltaY == 0) return;
           this.mouseX = e.clientX;
           this.mouseY = e.clientY;
-          this.zoom(e.deltaY > 0 ? "out" : "in", true);
+          this.zoom(e.deltaY > 0 ? -1 : 1, true);
         }, {"passive": true});
       }
       img.onmousedown = (e) => {
@@ -2022,7 +2019,7 @@ const PreviewMode = {
       this.clear({ reason: 'image onerror handler triggered' });
     }
 
-    img.src = typeof source === 'object' ? URL.createObjectURL(source) : source;
+    img.src = source instanceof Blob ? URL.createObjectURL(source) : source;
     imgWrapper.appendChild(img);
 
   },
@@ -2058,14 +2055,9 @@ const PreviewMode = {
   reset(toFullSize) {
     if (!this.active || !this.canTransform) return;
     requestAnimationFrame(() => {
-      let img_w, img_h;
-      if (this.swapDimensions) {
-        img_w = this.img_h;
-        img_h = this.img_w;
-      } else {
-        img_w = this.img_w;
-        img_h = this.img_h;
-      }
+      let {img_w, img_h} = this;
+      if (this.swapDimensions)
+        ({img_h: img_w, img_w: img_h} = this);
 
       const vw = innerWidth;
       const vh = innerHeight;
@@ -2165,13 +2157,8 @@ const PreviewMode = {
 
     requestAnimationFrame(() => {
       this.isFit = false;
-      let newScale = this.scale;
-      if (direction == "out") {
-        newScale /= this.SCALE_FACTOR;
-      } else {
-        newScale *= this.SCALE_FACTOR;
-      }
 
+      let newScale = this.scale * (direction > 0 ? this.SCALE_FACTOR : 1 / this.SCALE_FACTOR);
       newScale = clamp(this.SCALE_MIN, this.SCALE_MAX, newScale);
       const snapToFullSize = (this.scale < 1 && newScale > 1) || (this.scale > 1 && newScale < 1);
       if (snapToFullSize) newScale = 1;
@@ -2388,6 +2375,7 @@ class Dropdown {
   updatePos() {
     if (this.isStatic || !this.target?.node) return;
     this.target.rect = this.target.node.getBoundingClientRect();
+    if (!this.target.rect.width || !this.target.rect.height) return;
     this.container.style.left = `${this.target.rect.left + scrollX}px`;
     this.container.style.top = `${this.target.rect.top + scrollY}px`;
   }
@@ -2758,10 +2746,10 @@ const onKeyDown = async (e) => {
       PreviewMode.rotate(-90);
       break;
     case "PREVIEW_MODE_ZOOM_IN_KB":
-      PreviewMode.zoom("in");
+      PreviewMode.zoom(1);
       break;
     case "PREVIEW_MODE_ZOOM_OUT_KB":
-      PreviewMode.zoom("out");
+      PreviewMode.zoom(-1);
       break;
     case "PREVIEW_MODE_TOGGLE_FIT_KB":
       PreviewMode.toggleFit();
